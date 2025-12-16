@@ -1,0 +1,51 @@
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+  <p-card header="Employee Cafeteria Login" [style]="{ width: '400px' }">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div style="margin-bottom: 1.5rem;">
+        <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Username</label>
+        <input
+          id="username"
+          type="text"
+          pInputText
+          formControlName="username"
+          style="width: 100%;"
+          placeholder="Enter username"
+        />
+        <small class="p-error" *ngIf="f.username.touched && f.username.errors" style="display: block; margin-top: 0.25rem;">
+          Username must be 4–20 chars (letters, numbers, . _ -).
+        </small>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Password</label>
+        <p-password
+          id="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [style]="{ width: '100%' }"
+        ></p-password>
+        <small class="p-error" *ngIf="f.password.touched && f.password.errors" style="display: block; margin-top: 0.25rem;">
+          Must be 8+ chars with upper, lower, number and special char.
+        </small>
+      </div>
+
+      <div *ngIf="errorMessage" style="margin-bottom: 1rem;">
+        <small class="p-error" style="display: block;">{{ errorMessage }}</small>
+      </div>
+
+      <button
+        pButton
+        type="submit"
+        label="Login"
+        icon="pi pi-sign-in"
+        [disabled]="loading"
+        [style]="{ width: '100%' }"
+      ></button>
+    </form>
+  </p-card>
+</div>
+
+

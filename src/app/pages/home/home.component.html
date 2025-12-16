@@ -1,0 +1,138 @@
+<div class="home-container">
+  <!-- Toolbar with Add Button -->
+  <p-toolbar>
+    <div class="p-toolbar-group-left">
+      <h2>
+        <i class="pi pi-users" style="margin-right: 0.5rem;"></i>
+        Employee Cafeteria Members
+      </h2>
+    </div>
+    <div class="p-toolbar-group-right">
+      <button
+        pButton
+        type="button"
+        label="Add Member"
+        icon="pi pi-plus"
+        (click)="openAddUser()"
+        class="p-button-raised"
+      ></button>
+    </div>
+  </p-toolbar>
+
+  <!-- Users Table -->
+  <p-table
+    [value]="users"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [globalFilterFields]="['name', 'email', 'username', 'mobile']"
+    responsiveLayout="scroll"
+    styleClass="p-datatable-striped"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">
+          Name <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="email">
+          Email <p-sortIcon field="email"></p-sortIcon>
+        </th>
+        <th pSortableColumn="mobile">Mobile</th>
+        <th pSortableColumn="state">State</th>
+        <th pSortableColumn="city">City</th>
+        <th pSortableColumn="username">
+          Username <p-sortIcon field="username"></p-sortIcon>
+        </th>
+        <th>Tech Interests</th>
+        <th style="width: 120px;">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.mobile }}</td>
+        <td>{{ user.state }}</td>
+        <td>{{ user.city }}</td>
+        <td>{{ user.username }}</td>
+        <td>
+          <span *ngFor="let tech of user.techInterests; let last = last">
+            <span class="tech-badge">{{ tech }}</span>
+            <span *ngIf="!last">, </span>
+          </span>
+        </td>
+        <td>
+          <div style="display: flex; gap: 0.5rem;">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-rounded p-button-text p-button-info"
+              (click)="openEditUser(user)"
+              pTooltip="Edit"
+              tooltipPosition="top"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-rounded p-button-text p-button-danger"
+              (click)="deleteUser(user)"
+              pTooltip="Delete"
+              tooltipPosition="top"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 2rem;">
+          <i class="pi pi-info-circle" style="font-size: 2rem; color: #6c757d;"></i>
+          <p style="margin-top: 1rem; color: #6c757d;">No members found. Click "Add Member" to get started.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Add User Dialog -->
+  <p-dialog
+    [(visible)]="displayAddDialog"
+    [modal]="true"
+    [style]="{ width: '800px' }"
+    [maximizable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    header="Add New Member"
+    (onHide)="onDialogHide()"
+  >
+    <app-user-form
+      [user]="null"
+      (saved)="onUserSaved()"
+      (cancelled)="onDialogHide()"
+    ></app-user-form>
+  </p-dialog>
+
+  <!-- Edit User Dialog -->
+  <p-dialog
+    [(visible)]="displayEditDialog"
+    [modal]="true"
+    [style]="{ width: '800px' }"
+    [maximizable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    header="Edit Member Details"
+    (onHide)="onDialogHide()"
+  >
+    <app-user-form
+      [user]="selectedUser"
+      (saved)="onUserSaved()"
+      (cancelled)="onDialogHide()"
+    ></app-user-form>
+  </p-dialog>
+</div>

@@ -1,0 +1,68 @@
+/* Required field indicator */
+.required {
+  color: #e24c4c;
+  margin-right: 0.25rem;
+  font-weight: bold;
+}
+
+/* Form field styling */
+.p-field {
+  margin-bottom: 1.5rem;
+}
+
+.p-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Input styling */
+:host ::ng-deep .p-inputtext,
+:host ::ng-deep .p-dropdown,
+:host ::ng-deep .p-multiselect {
+  width: 100%;
+}
+
+:host ::ng-deep .p-password {
+  width: 100%;
+}
+
+:host ::ng-deep .p-password input {
+  width: 100%;
+}
+
+/* Error message styling */
+.p-error {
+  color: #e24c4c;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Radio and checkbox styling */
+.p-formgroup-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.p-field-radiobutton,
+.p-field-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+/* Button styling */
+:host ::ng-deep .p-button {
+  padding: 0.75rem 1.25rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .p-col-12.p-md-6 {
+    width: 100%;
+  }
+}
+

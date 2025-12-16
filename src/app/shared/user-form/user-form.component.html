@@ -1,0 +1,254 @@
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+  <div class="p-fluid p-formgrid p-grid">
+    <!-- Name -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="name"><span class="required">*</span> Name</label>
+      <input 
+        id="name" 
+        type="text" 
+        pInputText 
+        formControlName="name"
+        placeholder="Enter full name"
+      />
+      <small class="p-error" *ngIf="f.name.touched && f.name.errors">
+        <span *ngIf="f.name.errors['required']">Name is required.</span>
+        <span *ngIf="f.name.errors['minlength']">Name must be at least 2 characters.</span>
+      </small>
+    </div>
+
+    <!-- Email -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="email"><span class="required">*</span> Email</label>
+      <input 
+        id="email" 
+        type="email" 
+        pInputText 
+        formControlName="email"
+        placeholder="email@example.com"
+      />
+      <small class="p-error" *ngIf="f.email.touched && f.email.errors">
+        <span *ngIf="f.email.errors['required']">Email is required.</span>
+        <span *ngIf="f.email.errors['email']">Please enter a valid email.</span>
+      </small>
+    </div>
+
+    <!-- Mobile -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="mobile"><span class="required">*</span> Mobile</label>
+      <input 
+        id="mobile" 
+        type="text" 
+        pInputText 
+        formControlName="mobile"
+        placeholder="10-digit mobile number"
+      />
+      <small class="p-error" *ngIf="f.mobile.touched && f.mobile.errors">
+        <span *ngIf="f.mobile.errors['required']">Mobile is required.</span>
+        <span *ngIf="f.mobile.errors['pattern']">Enter valid 10-digit mobile number.</span>
+      </small>
+    </div>
+
+    <!-- Credit Card -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="creditCard"><span class="required">*</span> Credit Card Number</label>
+      <input 
+        id="creditCard" 
+        type="text" 
+        pInputText 
+        formControlName="creditCard"
+        placeholder="16-digit card number"
+        maxlength="16"
+      />
+      <small class="p-error" *ngIf="f.creditCard.touched && f.creditCard.errors">
+        <span *ngIf="f.creditCard.errors['required']">Credit card is required.</span>
+        <span *ngIf="f.creditCard.errors['pattern']">Enter valid 16-digit card number.</span>
+      </small>
+    </div>
+
+    <!-- State -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="state"><span class="required">*</span> State</label>
+      <p-dropdown 
+        id="state"
+        [options]="states" 
+        formControlName="state"
+        placeholder="Select State"
+        [showClear]="true"
+      ></p-dropdown>
+      <small class="p-error" *ngIf="f.state.touched && f.state.errors">
+        State is required.
+      </small>
+    </div>
+
+    <!-- City -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="city"><span class="required">*</span> City</label>
+      <p-dropdown 
+        id="city"
+        [options]="cities" 
+        formControlName="city"
+        placeholder="Select City"
+        [showClear]="true"
+        [disabled]="!f.state.value"
+      ></p-dropdown>
+      <small class="p-error" *ngIf="f.city.touched && f.city.errors">
+        City is required.
+      </small>
+    </div>
+
+    <!-- Gender -->
+    <div class="p-field p-col-12">
+      <label><span class="required">*</span> Gender</label>
+      <div class="p-formgroup-inline" style="margin-top: 0.5rem;">
+        <div class="p-field-radiobutton" *ngFor="let g of ['Male','Female','Other']" style="margin-right: 1.5rem;">
+          <p-radioButton
+            name="gender"
+            [value]="g"
+            formControlName="gender"
+            [inputId]="'gender-' + g"
+          ></p-radioButton>
+          <label [for]="'gender-' + g" style="margin-left: 0.5rem;">{{ g }}</label>
+        </div>
+      </div>
+      <small class="p-error" *ngIf="f.gender.touched && f.gender.errors">
+        Gender is required.
+      </small>
+    </div>
+
+    <!-- Hobbies -->
+    <div class="p-field p-col-12">
+      <label><span class="required">*</span> Hobbies</label>
+      <div class="p-formgroup-inline" style="margin-top: 0.5rem;">
+        <div class="p-field-checkbox" *ngFor="let h of hobbiesOptions" style="margin-right: 1.5rem;">
+          <p-checkbox
+            [value]="h.value"
+            formControlName="hobbies"
+            [inputId]="'hobby-' + h.value"
+          ></p-checkbox>
+          <label [for]="'hobby-' + h.value" style="margin-left: 0.5rem;">{{ h.label }}</label>
+        </div>
+      </div>
+      <small class="p-error" *ngIf="f.hobbies.touched && f.hobbies.errors">
+        Select at least one hobby.
+      </small>
+    </div>
+
+    <!-- Tech Interests -->
+    <div class="p-field p-col-12">
+      <label for="techInterests"><span class="required">*</span> Tech Interests</label>
+      <p-multiSelect
+        id="techInterests"
+        [options]="techOptions"
+        formControlName="techInterests"
+        defaultLabel="Select tech interests"
+        placeholder="Select tech interests"
+        [showHeader]="false"
+      ></p-multiSelect>
+      <small class="p-error" *ngIf="f.techInterests.touched && f.techInterests.errors">
+        Select at least one tech interest.
+      </small>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="p-field p-col-12">
+      <label for="additionalInfo">Additional Information</label>
+      <textarea 
+        id="additionalInfo"
+        pInputTextarea 
+        rows="3" 
+        formControlName="additionalInfo"
+        placeholder="Any additional notes..."
+      ></textarea>
+    </div>
+
+    <!-- Username -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="username"><span class="required">*</span> Username</label>
+      <input 
+        id="username"
+        type="text" 
+        pInputText 
+        formControlName="username"
+        placeholder="4-20 characters"
+        [disabled]="isEditMode"
+      />
+      <small class="p-error" *ngIf="f.username.touched && f.username.errors">
+        <span *ngIf="f.username.errors['required']">Username is required.</span>
+        <span *ngIf="f.username.errors['pattern']">Username: 4-20 chars, letters/numbers/._-</span>
+      </small>
+    </div>
+
+    <!-- Date of Birth -->
+    <div class="p-field p-col-12 p-md-6">
+      <label for="dob"><span class="required">*</span> Date of Birth</label>
+      <input 
+        id="dob"
+        type="date" 
+        pInputText 
+        formControlName="dob"
+      />
+      <small class="p-error" *ngIf="f.dob.touched && f.dob.errors">
+        Date of birth is required.
+      </small>
+    </div>
+
+    <!-- Password (only for add mode) -->
+    <div class="p-field p-col-12 p-md-6" *ngIf="!isEditMode">
+      <label for="password"><span class="required">*</span> Password</label>
+      <p-password
+        id="password"
+        [feedback]="true"
+        formControlName="password"
+        [toggleMask]="true"
+        placeholder="Min 8 characters"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+      ></p-password>
+      <small class="p-error" *ngIf="f.password.touched && f.password.errors">
+        <span *ngIf="f.password.errors['required']">Password is required.</span>
+        <span *ngIf="f.password.errors['minlength']">Minimum 8 characters.</span>
+        <span *ngIf="f.password.errors['pattern']">Must include upper, lower, number, special char.</span>
+      </small>
+    </div>
+
+    <!-- Confirm Password (only for add mode) -->
+    <div class="p-field p-col-12 p-md-6" *ngIf="!isEditMode">
+      <label for="confirmPassword"><span class="required">*</span> Confirm Password</label>
+      <p-password
+        id="confirmPassword"
+        [feedback]="false"
+        formControlName="confirmPassword"
+        [toggleMask]="true"
+        placeholder="Re-enter password"
+        styleClass="w-full"
+        inputStyleClass="w-full"
+      ></p-password>
+      <small
+        class="p-error"
+        *ngIf="userForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched)"
+      >
+        Passwords must match.
+      </small>
+    </div>
+  </div>
+
+  <!-- Form Actions -->
+  <div class="p-d-flex p-jc-end p-mt-4" style="display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem;">
+    <button
+      pButton
+      type="button"
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="onCancel()"
+    ></button>
+    <button
+      pButton
+      type="submit"
+      [label]="isEditMode ? 'Update' : 'Save'"
+      [icon]="isEditMode ? 'pi pi-check' : 'pi pi-save'"
+      [disabled]="submitting"
+      class="p-button-primary"
+    ></button>
+  </div>
+</form>
