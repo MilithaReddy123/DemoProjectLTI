@@ -1,5 +1,5 @@
 export interface User {
-  id?: number;
+  id?: string;
   name: string;
   email: string;
   mobile: string;
@@ -9,7 +9,7 @@ export interface User {
   gender: string;
   hobbies: string[];
   techInterests: string[];
-  additionalInfo?: string;
+  address?: string;
   username: string;
   password?: string;
   confirmPassword?: string;

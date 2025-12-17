@@ -9,6 +9,7 @@ import { AppComponent } from './app.component';
 
 // Components
 import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
 import { HomeComponent } from './pages/home/home.component';
 import { UserFormComponent } from './shared/user-form/user-form.component';
 
@@ -26,9 +27,12 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
+import { ChipModule } from 'primeng/chip';
+import { TagModule } from 'primeng/tag';
+import { MessageModule } from 'primeng/message';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, HomeComponent, UserFormComponent],
+  declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -49,7 +53,10 @@ import { TooltipModule } from 'primeng/tooltip';
     MultiSelectModule,
     InputTextareaModule,
     ToolbarModule,
-    TooltipModule
+    TooltipModule,
+    ChipModule,
+    TagModule,
+    MessageModule
   ],
   providers: [],
   bootstrap: [AppComponent]

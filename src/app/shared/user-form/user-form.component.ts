@@ -13,8 +13,7 @@ import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-form',
-  templateUrl: './user-form.component.html',
-  styleUrls: ['./user-form.component.css']
+  templateUrl: './user-form.component.html'
 })
 export class UserFormComponent implements OnInit, OnChanges {
   @Input() user: User | null = null;
@@ -80,7 +79,7 @@ export class UserFormComponent implements OnInit, OnChanges {
         gender: ['Male', Validators.required],
         hobbies: [[], Validators.required],
         techInterests: [[], Validators.required],
-        additionalInfo: [''],
+        address: [''],
         username: [
           '',
           [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]{4,20}$/)]
@@ -133,7 +132,7 @@ export class UserFormComponent implements OnInit, OnChanges {
         gender: this.user.gender,
         hobbies: this.user.hobbies || [],
         techInterests: this.user.techInterests || [],
-        additionalInfo: this.user.additionalInfo || '',
+        address: this.user.address || '',
         username: this.user.username,
         dob: formattedDob
       });
@@ -207,17 +206,23 @@ export class UserFormComponent implements OnInit, OnChanges {
             gender: formValue.gender,
             hobbies: formValue.hobbies,
             techInterests: formValue.techInterests,
-            additionalInfo: formValue.additionalInfo
+            address: formValue.address
           })
           .toPromise();
       } else {
         // Add mode - send all fields including password
+        console.log('Submitting form data:', {
+          ...formValue,
+          password: '***hidden***',
+          confirmPassword: '***hidden***'
+        });
         await this.userService.addUser(formValue).toPromise();
       }
 
       this.saved.emit();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save user', err);
+      alert(err?.error?.message || 'Failed to save user. Please check all required fields.');
     } finally {
       this.submitting = false;
     }

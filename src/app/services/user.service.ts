@@ -13,11 +13,15 @@ export class UserService {
     return this.http.post(`${this.baseUrl}/login`, credentials);
   }
 
+  register(credentials: { username: string; password: string }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/register`, credentials);
+  }
+
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.baseUrl}/users`);
   }
 
-  getUserById(id: number): Observable<User> {
+  getUserById(id: string): Observable<User> {
     return this.http.get<User>(`${this.baseUrl}/users/${id}`);
   }
 
@@ -25,11 +29,11 @@ export class UserService {
     return this.http.post(`${this.baseUrl}/users`, user);
   }
 
-  updateUser(id: number, user: Partial<User>): Observable<any> {
+  updateUser(id: string, user: Partial<User>): Observable<any> {
     return this.http.put(`${this.baseUrl}/users/${id}`, user);
   }
 
-  deleteUser(id: number): Observable<any> {
+  deleteUser(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/users/${id}`);
   }
 }

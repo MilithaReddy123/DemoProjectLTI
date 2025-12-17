@@ -1,0 +1,114 @@
+<div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa;">
+  <p-card [style]="{ width: '420px', 'max-width': '90%' }">
+    <ng-template pTemplate="header">
+      <div style="text-align: center; padding: 2rem 0;">
+        <i class="pi pi-user-plus" style="font-size: 3rem; color: #495057;"></i>
+        <h2 style="margin-top: 1rem; margin-bottom: 0.5rem; color: #495057;">Create Account</h2>
+        <p style="color: #6c757d; margin: 0;">Register for cafeteria membership</p>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <div class="p-fluid">
+        <div class="p-field" style="margin-bottom: 1.5rem;">
+          <label for="username" style="display: block; margin-bottom: 0.5rem;">
+            Username <span class="p-error">*</span>
+          </label>
+          <span class="p-input-icon-left">
+            <i class="pi pi-user"></i>
+            <input
+              id="username"
+              type="text"
+              pInputText
+              formControlName="username"
+              placeholder="Choose a username"
+              class="p-inputtext-lg"
+              style="width: 100%;"
+            />
+          </span>
+          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.username.touched && f.username.errors">
+            <span *ngIf="f.username.errors['required']">Username is required</span>
+            <span *ngIf="f.username.errors['pattern']">4-20 characters (letters, numbers, . _ - allowed)</span>
+          </small>
+        </div>
+
+        <div class="p-field" style="margin-bottom: 1.5rem;">
+          <label for="password" style="display: block; margin-bottom: 0.5rem;">
+            Password <span class="p-error">*</span>
+          </label>
+          <p-password
+            id="password"
+            formControlName="password"
+            [feedback]="true"
+            [toggleMask]="true"
+            placeholder="Create a password"
+            styleClass="w-full"
+            [inputStyle]="{ width: '100%' }"
+            inputStyleClass="p-inputtext-lg"
+          ></p-password>
+          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.password.touched && f.password.errors">
+            <span *ngIf="f.password.errors['required']">Password is required</span>
+            <span *ngIf="f.password.errors['minlength']">Minimum 8 characters</span>
+            <span *ngIf="f.password.errors['pattern']">Must include uppercase, lowercase, number, and special character</span>
+          </small>
+        </div>
+
+        <div class="p-field" style="margin-bottom: 1.5rem;">
+          <label for="confirmPassword" style="display: block; margin-bottom: 0.5rem;">
+            Confirm Password <span class="p-error">*</span>
+          </label>
+          <p-password
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Re-enter password"
+            styleClass="w-full"
+            [inputStyle]="{ width: '100%' }"
+            inputStyleClass="p-inputtext-lg"
+          ></p-password>
+          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="registerForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched)">
+            Passwords must match
+          </small>
+        </div>
+
+        <p-message 
+          *ngIf="errorMessage" 
+          severity="error" 
+          [text]="errorMessage"
+          [style]="{ width: '100%', 'margin-bottom': '1rem' }"
+        ></p-message>
+
+        <p-message 
+          *ngIf="successMessage" 
+          severity="success" 
+          [text]="successMessage"
+          [style]="{ width: '100%', 'margin-bottom': '1rem' }"
+        ></p-message>
+
+        <button
+          pButton
+          type="submit"
+          label="Create Account"
+          icon="pi pi-user-plus"
+          [loading]="loading"
+          class="p-button-lg p-button-success"
+          style="width: 100%; margin-bottom: 1rem;"
+        ></button>
+
+        <div style="text-align: center; padding-top: 1rem; border-top: 1px solid #dee2e6;">
+          <p style="color: #6c757d; margin-bottom: 0.5rem;">Already have an account?</p>
+          <button
+            pButton
+            type="button"
+            label="Sign In"
+            icon="pi pi-sign-in"
+            class="p-button-text"
+            (click)="goToLogin()"
+          ></button>
+        </div>
+      </div>
+    </form>
+  </p-card>
+</div>
+

@@ -1,83 +1,98 @@
-<div class="home-container">
-  <!-- Toolbar with Add Button -->
-  <p-toolbar>
-    <div class="p-toolbar-group-left">
-      <h2>
-        <i class="pi pi-users" style="margin-right: 0.5rem;"></i>
-        Employee Cafeteria Members
-      </h2>
+<div class="p-p-4">
+  <!-- Header -->
+  <div class="p-d-flex p-jc-between p-ai-center p-mb-4">
+    <div>
+      <h1 class="p-m-0 p-text-bold">
+        <i class="pi pi-users p-mr-2"></i>Cafeteria Members
+      </h1>
+      <p class="p-text-secondary p-mt-1 p-mb-0">Manage member registrations</p>
     </div>
-    <div class="p-toolbar-group-right">
-      <button
-        pButton
-        type="button"
-        label="Add Member"
-        icon="pi pi-plus"
-        (click)="openAddUser()"
-        class="p-button-raised"
-      ></button>
-    </div>
-  </p-toolbar>
+    <button
+      pButton
+      type="button"
+      label="Add Member"
+      icon="pi pi-plus"
+      (click)="openAddUser()"
+      class="p-button-success"
+    ></button>
+  </div>
 
-  <!-- Users Table -->
-  <p-table
-    [value]="users"
-    [loading]="loading"
-    [paginator]="true"
-    [rows]="10"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
-    [rowsPerPageOptions]="[10, 25, 50]"
-    [globalFilterFields]="['name', 'email', 'username', 'mobile']"
-    responsiveLayout="scroll"
-    styleClass="p-datatable-striped"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th pSortableColumn="name">
-          Name <p-sortIcon field="name"></p-sortIcon>
-        </th>
-        <th pSortableColumn="email">
-          Email <p-sortIcon field="email"></p-sortIcon>
-        </th>
-        <th pSortableColumn="mobile">Mobile</th>
-        <th pSortableColumn="state">State</th>
-        <th pSortableColumn="city">City</th>
-        <th pSortableColumn="username">
-          Username <p-sortIcon field="username"></p-sortIcon>
-        </th>
-        <th>Tech Interests</th>
-        <th style="width: 120px;">Actions</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-user>
-      <tr>
-        <td>{{ user.name }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.mobile }}</td>
-        <td>{{ user.state }}</td>
-        <td>{{ user.city }}</td>
-        <td>{{ user.username }}</td>
-        <td>
-          <span *ngFor="let tech of user.techInterests; let last = last">
-            <span class="tech-badge">{{ tech }}</span>
-            <span *ngIf="!last">, </span>
+  <!-- Table Card -->
+  <p-card>
+    <p-table
+      #dt
+      [value]="users"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['name', 'email', 'username', 'mobile', 'city', 'state']"
+      responsiveLayout="scroll"
+      [rowHover]="true"
+      dataKey="id"
+    >
+      <ng-template pTemplate="caption">
+        <div class="p-d-flex p-jc-between p-ai-center">
+          <span class="p-text-bold">Member Directory</span>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input 
+              pInputText 
+              type="text" 
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+              placeholder="Search members..."
+            />
           </span>
-        </td>
-        <td>
-          <div style="display: flex; gap: 0.5rem;">
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
+          <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+          <th>Mobile</th>
+          <th>City</th>
+          <th>State</th>
+          <th pSortableColumn="username">Username <p-sortIcon field="username"></p-sortIcon></th>
+          <th>Tech Stack</th>
+          <th style="width: 120px;">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.mobile }}</td>
+          <td>{{ user.city }}</td>
+          <td>{{ user.state }}</td>
+          <td>
+            <p-tag [value]="user.username" severity="info"></p-tag>
+          </td>
+          <td>
+            <p-chip 
+              *ngFor="let tech of user.techInterests" 
+              [label]="tech" 
+              styleClass="p-mr-1 p-mb-1"
+            ></p-chip>
+            <span *ngIf="!user.techInterests?.length" class="p-text-secondary">None</span>
+          </td>
+          <td>
             <button
               pButton
+              pRipple
               type="button"
               icon="pi pi-pencil"
-              class="p-button-rounded p-button-text p-button-info"
+              class="p-button-rounded p-button-text p-button-info p-mr-1"
               (click)="openEditUser(user)"
               pTooltip="Edit"
               tooltipPosition="top"
             ></button>
             <button
               pButton
+              pRipple
               type="button"
               icon="pi pi-trash"
               class="p-button-rounded p-button-text p-button-danger"
@@ -85,22 +100,31 @@
               pTooltip="Delete"
               tooltipPosition="top"
             ></button>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
+          </td>
+        </tr>
+      </ng-template>
 
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="8" style="text-align: center; padding: 2rem;">
-          <i class="pi pi-info-circle" style="font-size: 2rem; color: #6c757d;"></i>
-          <p style="margin-top: 1rem; color: #6c757d;">No members found. Click "Add Member" to get started.</p>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="p-text-center p-py-5">
+            <i class="pi pi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+            <h4 class="p-mt-3 p-mb-2">No members found</h4>
+            <p class="p-text-secondary">Add your first member to get started</p>
+            <button
+              pButton
+              type="button"
+              label="Add Member"
+              icon="pi pi-plus"
+              (click)="openAddUser()"
+              class="p-button-sm p-mt-2"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
 
-  <!-- Add User Dialog -->
+  <!-- Add Dialog -->
   <p-dialog
     [(visible)]="displayAddDialog"
     [modal]="true"
@@ -110,6 +134,7 @@
     [resizable]="false"
     header="Add New Member"
     (onHide)="onDialogHide()"
+    [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }"
   >
     <app-user-form
       [user]="null"
@@ -118,7 +143,7 @@
     ></app-user-form>
   </p-dialog>
 
-  <!-- Edit User Dialog -->
+  <!-- Edit Dialog -->
   <p-dialog
     [(visible)]="displayEditDialog"
     [modal]="true"
@@ -126,8 +151,9 @@
     [maximizable]="true"
     [draggable]="false"
     [resizable]="false"
-    header="Edit Member Details"
+    header="Edit Member"
     (onHide)="onDialogHide()"
+    [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }"
   >
     <app-user-form
       [user]="selectedUser"
