@@ -21,16 +21,11 @@ const initializeDatabase = async (pool) => {
     await pool.query('SELECT 1');
     console.log('✓ MySQL database connected successfully');
 
-    // Drop old tables if they exist (for clean migration)
-    console.log('⚠ Dropping old tables if they exist...');
-    await pool.query('SET FOREIGN_KEY_CHECKS = 0');
-    await pool.query('DROP TABLE IF EXISTS user_interests');
-    await pool.query('DROP TABLE IF EXISTS users');
-    await pool.query('SET FOREIGN_KEY_CHECKS = 1');
+  
 
     // Create users table with UUID
     await pool.query(`
-      CREATE TABLE users (
+      CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(36) NOT NULL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         email VARCHAR(100) NOT NULL UNIQUE,
@@ -46,7 +41,7 @@ const initializeDatabase = async (pool) => {
 
     // Create user_interests table
     await pool.query(`
-      CREATE TABLE user_interests (
+      CREATE TABLE IF NOT EXISTS user_interests (
         user_id VARCHAR(36) NOT NULL PRIMARY KEY,
         mobile VARCHAR(15) NOT NULL,
         credit_card_last4 VARCHAR(4),

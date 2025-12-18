@@ -18,21 +18,28 @@ export class RegisterComponent {
     private router: Router,
     private userService: UserService
   ) {
-    this.registerForm = this.fb.group({
-      username: [
-        '',
-        [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]{4,20}$/)]
-      ],
-      password: [
-        '',
-        [
-          Validators.required,
-          Validators.minLength(8),
-          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-        ]
-      ],
-      confirmPassword: ['', Validators.required]
-    }, { validators: this.passwordsMatchValidator });
+    this.registerForm = this.fb.group(
+      {
+        name: ['', [Validators.required, Validators.minLength(2)]],
+        username: [
+          '',
+          [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]{4,20}$/)]
+        ],
+        email: ['', [Validators.required, Validators.email]],
+        password: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(8),
+            Validators.pattern(
+              /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/
+            )
+          ]
+        ],
+        confirmPassword: ['', Validators.required]
+      },
+      { validators: this.passwordsMatchValidator }
+    );
   }
 
   passwordsMatchValidator(control: AbstractControl) {
@@ -61,8 +68,10 @@ export class RegisterComponent {
     this.successMessage = '';
 
     try {
-      const { username, password } = this.registerForm.value;
-      await this.userService.register({ username, password }).toPromise();
+      const { name, username, email, password } = this.registerForm.value;
+      await this.userService
+        .register({ name, username, email, password })
+        .toPromise();
       
       this.successMessage = 'Registration successful! Redirecting to login...';
       
@@ -70,7 +79,9 @@ export class RegisterComponent {
         this.router.navigate(['/login']);
       }, 2000);
     } catch (err: any) {
-      this.errorMessage = err?.error?.message || 'Registration failed. Username might already exist.';
+      this.errorMessage =
+        err?.error?.message ||
+        'Registration failed. Username or email might already exist or data is invalid.';
     } finally {
       this.loading = false;
     }

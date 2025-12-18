@@ -1,5 +1,5 @@
 <div style="display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f8f9fa;">
-  <p-card [style]="{ width: '420px', 'max-width': '90%' }">
+  <p-card [style]="{ width: '800px', 'max-width': '100%' }">
     <ng-template pTemplate="header">
       <div style="text-align: center; padding: 2rem 0;">
         <i class="pi pi-user-plus" style="font-size: 3rem; color: #495057;"></i>
@@ -10,6 +10,30 @@
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="p-fluid">
+        <!-- Name -->
+        <div class="p-field" style="margin-bottom: 1.5rem;">
+          <label for="name" style="display: block; margin-bottom: 0.5rem;">
+            Name <span class="p-error">*</span>
+          </label>
+          <input
+            id="name"
+            type="text"
+            pInputText
+            formControlName="name"
+            placeholder="Full name"
+            class="p-inputtext-lg"
+            style="width: 100%;"
+          />
+          <small
+            class="p-error"
+            style="display: block; margin-top: 0.25rem;"
+            *ngIf="f.name.touched && f.name.errors"
+          >
+            Name is required (min 2 characters)
+          </small>
+        </div>
+
+        <!-- Username -->
         <div class="p-field" style="margin-bottom: 1.5rem;">
           <label for="username" style="display: block; margin-bottom: 0.5rem;">
             Username <span class="p-error">*</span>
@@ -26,9 +50,39 @@
               style="width: 100%;"
             />
           </span>
-          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.username.touched && f.username.errors">
+          <small
+            class="p-error"
+            style="display: block; margin-top: 0.25rem;"
+            *ngIf="f.username.touched && f.username.errors"
+          >
             <span *ngIf="f.username.errors['required']">Username is required</span>
-            <span *ngIf="f.username.errors['pattern']">4-20 characters (letters, numbers, . _ - allowed)</span>
+            <span *ngIf="f.username.errors['pattern']"
+              >4-20 characters (letters, numbers, . _ - allowed)</span
+            >
+          </small>
+        </div>
+
+        <!-- Email -->
+        <div class="p-field" style="margin-bottom: 1.5rem;">
+          <label for="email" style="display: block; margin-bottom: 0.5rem;">
+            Email <span class="p-error">*</span>
+          </label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="email@example.com"
+            class="p-inputtext-lg"
+            style="width: 100%;"
+          />
+          <small
+            class="p-error"
+            style="display: block; margin-top: 0.25rem;"
+            *ngIf="f.email.touched && f.email.errors"
+          >
+            <span *ngIf="f.email.errors['required']">Email is required</span>
+            <span *ngIf="f.email.errors['email']">Please enter a valid email</span>
           </small>
         </div>
 
