@@ -13,28 +13,34 @@ const register = (pool) => async (req, res) => {
       });
     }
 
-    // Name validation: min 2 chars (matches frontend)
+    // Name validation: min 2 chars, only letters and spaces (no numbers)
     if (typeof name !== 'string' || name.trim().length < 2) {
       return res
         .status(400)
         .json({ message: 'Name must be at least 2 characters.' });
     }
-
-    // Username validation: 4‑20 chars, same regex as frontend
-    const usernamePattern = /^[a-zA-Z0-9._-]{4,20}$/;
-    if (!usernamePattern.test(username)) {
+    const namePattern = /^[a-zA-Z\s]+$/;
+    if (!namePattern.test(name.trim())) {
       return res.status(400).json({
-        message:
-          'Username must be 4-20 characters (letters, numbers, . _ - allowed).'
+        message: 'Name can only contain letters and spaces (numbers not allowed).'
       });
     }
 
-    // Email validation similar to Angular email validator
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Username validation: 4‑20 chars, only letters, numbers, underscore and @
+    const usernamePattern = /^[a-zA-Z0-9_@]{4,20}$/;
+    if (!usernamePattern.test(username)) {
+      return res.status(400).json({
+        message:
+          'Username must be 4-20 characters (letters, numbers, underscore _ and @ only).'
+      });
+    }
+
+    // Email validation: check for valid format and TLD
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
     if (!emailPattern.test(email)) {
       return res
         .status(400)
-        .json({ message: 'Please enter a valid email address.' });
+        .json({ message: 'Please enter a valid email address with a valid domain extension (e.g., .com, .org, .net).' });
     }
 
     // Password strength (same as frontend)

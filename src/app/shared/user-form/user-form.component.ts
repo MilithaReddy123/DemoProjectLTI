@@ -183,49 +183,33 @@ export class UserFormComponent implements OnInit, OnChanges {
     this.cancelled.emit();
   }
 
-  async onSubmit(): Promise<void> {
+  onSubmit(): void {
     if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;
     }
 
     this.submitting = true;
+    const formValue = this.userForm.value;
+    const userData = this.user && this.user.id
+      ? { name: formValue.name, email: formValue.email, mobile: formValue.mobile, creditCard: formValue.creditCard, state: formValue.state, city: formValue.city, gender: formValue.gender, hobbies: formValue.hobbies, techInterests: formValue.techInterests, address: formValue.address, dob: formValue.dob }
+      : formValue;
+    
+    const request = this.user && this.user.id
+      ? this.userService.updateUser(this.user.id, userData)
+      : this.userService.addUser(userData);
 
-    try {
-      const formValue = this.userForm.value;
-
-      if (this.user && this.user.id) {
-        // Edit mode - send all fields except password
-        await this.userService
-          .updateUser(this.user.id, {
-            name: formValue.name,
-            email: formValue.email,
-            mobile: formValue.mobile,
-            state: formValue.state,
-            city: formValue.city,
-            gender: formValue.gender,
-            hobbies: formValue.hobbies,
-            techInterests: formValue.techInterests,
-            address: formValue.address
-          })
-          .toPromise();
-      } else {
-        // Add mode - send all fields including password
-        console.log('Submitting form data:', {
-          ...formValue,
-          password: '***hidden***',
-          confirmPassword: '***hidden***'
-        });
-        await this.userService.addUser(formValue).toPromise();
+    request.subscribe({
+      next: () => {
+        this.saved.emit();
+        this.submitting = false;
+      },
+      error: (err: any) => {
+        console.error('Failed to save user', err);
+        alert(err?.error?.message || 'Failed to save user. Please check all required fields.');
+        this.submitting = false;
       }
-
-      this.saved.emit();
-    } catch (err: any) {
-      console.error('Failed to save user', err);
-      alert(err?.error?.message || 'Failed to save user. Please check all required fields.');
-    } finally {
-      this.submitting = false;
-    }
+    });
   }
 }
 

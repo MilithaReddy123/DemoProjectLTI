@@ -39,7 +39,7 @@ export class LoginComponent {
     return this.loginForm.controls;
   }
 
-  async onSubmit() {
+  onSubmit() {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -48,14 +48,16 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
 
-    try {
-      await this.userService.login(this.loginForm.value).toPromise();
-      this.router.navigate(['/home']);
-    } catch (err: any) {
-      this.errorMessage = err?.error?.message || 'Invalid username or password';
-    } finally {
-      this.loading = false;
-    }
+    this.userService.login(this.loginForm.value).subscribe({
+      next: () => {
+        this.router.navigate(['/home']);
+        this.loading = false;
+      },
+      error: (err: any) => {
+        this.errorMessage = err?.error?.message || 'Invalid username or password';
+        this.loading = false;
+      }
+    });
   }
 }
 

@@ -27,11 +27,13 @@
       [rows]="10"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [globalFilterFields]="['name', 'email', 'username', 'mobile', 'city', 'state']"
+      [rowsPerPageOptions]="[5, 10, 25, 50]"
+      [globalFilterFields]="['email', 'username', 'mobile', 'city', 'state', 'gender', 'address']"
       responsiveLayout="scroll"
       [rowHover]="true"
       dataKey="id"
+      [style]="{ 'table-layout': 'fixed' }"
+      styleClass="p-datatable-sm"
     >
       <ng-template pTemplate="caption">
         <div class="p-d-flex p-jc-between p-ai-center">
@@ -50,63 +52,104 @@
 
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="name">Name <p-sortIcon field="name"></p-sortIcon></th>
-          <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
-          <th>Mobile</th>
-          <th>City</th>
-          <th>State</th>
-          <th pSortableColumn="username">Username <p-sortIcon field="username"></p-sortIcon></th>
-          <th>Tech Stack</th>
-          <th style="width: 120px;">Actions</th>
+          <th pSortableColumn="email" style="width: 12%; padding: 0.75rem;">Email <p-sortIcon field="email"></p-sortIcon></th>
+          <th pSortableColumn="username" style="width: 8%; padding: 0.75rem;">Username <p-sortIcon field="username"></p-sortIcon></th>
+          <th style="width: 7%; padding: 0.75rem;">Mobile</th>
+          <th style="width: 8%; padding: 0.75rem;">Credit Card</th>
+          <th pSortableColumn="state" style="width: 7%; padding: 0.75rem;">State <p-sortIcon field="state"></p-sortIcon></th>
+          <th pSortableColumn="city" style="width: 7%; padding: 0.75rem;">City <p-sortIcon field="city"></p-sortIcon></th>
+          <th style="width: 6%; padding: 0.75rem;">Gender</th>
+          <th style="width: 8%; padding: 0.75rem;">Hobbies</th>
+          <th style="width: 8%; padding: 0.75rem;">Tech Interests</th>
+          <th style="width: 10%; padding: 0.75rem;">Address</th>
+          <th pSortableColumn="dob" style="width: 7%; padding: 0.75rem;">DOB <p-sortIcon field="dob"></p-sortIcon></th>
+          <th pSortableColumn="created_at" style="width: 7%; padding: 0.75rem;">Created <p-sortIcon field="created_at"></p-sortIcon></th>
+          <th style="width: 5%; padding: 0.75rem;">Actions</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-user>
         <tr>
-          <td>{{ user.name }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.mobile }}</td>
-          <td>{{ user.city }}</td>
-          <td>{{ user.state }}</td>
-          <td>
-            <p-tag [value]="user.username" severity="info"></p-tag>
+          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.email)" class="p-d-flex p-ai-center" [pTooltip]="user.email.length > 30 ? user.email : null" tooltipPosition="top">
+              <i class="pi pi-envelope p-mr-2" style="color: #6c757d;"></i>
+              <span style="display: inline-block; max-width: 100%;">{{ user.email }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.email)" class="p-text-secondary">-</span>
           </td>
-          <td>
-            <p-chip 
-              *ngFor="let tech of user.techInterests" 
-              [label]="tech" 
-              styleClass="p-mr-1 p-mb-1"
-            ></p-chip>
-            <span *ngIf="!user.techInterests?.length" class="p-text-secondary">None</span>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <p-tag *ngIf="hasValue(user.username)" [value]="user.username" severity="info"></p-tag>
+            <span *ngIf="!hasValue(user.username)" class="p-text-secondary">-</span>
           </td>
-          <td>
-            <button
-              pButton
-              pRipple
-              type="button"
-              icon="pi pi-pencil"
-              class="p-button-rounded p-button-text p-button-info p-mr-1"
-              (click)="openEditUser(user)"
-              pTooltip="Edit"
-              tooltipPosition="top"
-            ></button>
-            <button
-              pButton
-              pRipple
-              type="button"
-              icon="pi pi-trash"
-              class="p-button-rounded p-button-text p-button-danger"
-              (click)="deleteUser(user)"
-              pTooltip="Delete"
-              tooltipPosition="top"
-            ></button>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.mobile)" class="p-d-flex p-ai-center">
+              <i class="pi pi-phone p-mr-2" style="color: #6c757d;"></i>
+              <span>{{ user.mobile }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.mobile)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.creditCard)" class="p-d-flex p-ai-center">
+              <i class="pi pi-credit-card p-mr-2" style="color: #6c757d;"></i>
+              <span class="p-text-muted" style="font-family: monospace; font-size: 0.9rem; letter-spacing: 0.5px;">{{ user.creditCard }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.creditCard)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.state)">{{ user.state }}</span>
+            <span *ngIf="!hasValue(user.state)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.city)">{{ user.city }}</span>
+            <span *ngIf="!hasValue(user.city)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <p-tag *ngIf="hasValue(user.gender)" [value]="user.gender" [severity]="user.gender === 'Male' ? 'success' : user.gender === 'Female' ? 'warning' : 'info'"></p-tag>
+            <span *ngIf="!hasValue(user.gender)" class="p-text-secondary">-</span>
+          </td>
+          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <div *ngIf="formatArray(user.hobbies).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
+              <p-chip *ngFor="let hobby of formatArray(user.hobbies)" [label]="hobby"></p-chip>
+            </div>
+            <span *ngIf="!formatArray(user.hobbies).length" class="p-text-secondary">-</span>
+          </td>
+          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <div *ngIf="formatArray(user.techInterests).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
+              <p-chip *ngFor="let tech of formatArray(user.techInterests)" [label]="tech"></p-chip>
+            </div>
+            <span *ngIf="!formatArray(user.techInterests).length" class="p-text-secondary">-</span>
+          </td>
+          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="user.address.length > 40 ? user.address : null" tooltipPosition="top">
+              <i class="pi pi-map-marker p-mr-2" style="color: #6c757d;"></i>
+              <span style="display: inline-block; max-width: 100%; line-height: 1.5;">{{ user.address }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.address)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.dob)" class="p-d-flex p-ai-center">
+              <i class="pi pi-calendar p-mr-2" style="color: #007bff;"></i>
+              <span class="p-text-primary" style="font-weight: 500;">{{ formatDateOnly(user.dob) }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.dob)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top;">
+            <span *ngIf="hasValue(user.created_at)" class="p-d-flex p-ai-center">
+              <i class="pi pi-clock p-mr-2" style="color: #6c757d;"></i>
+              <span class="p-text-secondary" style="font-size: 0.9rem;">{{ formatDate(user.created_at) }}</span>
+            </span>
+            <span *ngIf="!hasValue(user.created_at)" class="p-text-secondary">-</span>
+          </td>
+          <td style="padding: 0.75rem; vertical-align: top; white-space: nowrap;">
+            <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info p-mr-1" (click)="openEditUser(user)" pTooltip="Edit" tooltipPosition="top"></button>
+            <button pButton pRipple type="button" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteUser(user)" pTooltip="Delete" tooltipPosition="top"></button>
           </td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="p-text-center p-py-5">
+          <td colspan="13" class="p-text-center p-py-5">
             <i class="pi pi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
             <h4 class="p-mt-3 p-mb-2">No members found</h4>
             <p class="p-text-secondary">Add your first member to get started</p>

@@ -14,6 +14,8 @@ export interface User {
   password?: string;
   confirmPassword?: string;
   dob: string | Date;
+  created_at?: string | Date;
+  updated_at?: string | Date;
 }
 
 

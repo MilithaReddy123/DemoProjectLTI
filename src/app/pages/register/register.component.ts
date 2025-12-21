@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
 
@@ -20,12 +20,22 @@ export class RegisterComponent {
   ) {
     this.registerForm = this.fb.group(
       {
-        name: ['', [Validators.required, Validators.minLength(2)]],
+        name: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(2),
+            Validators.pattern(/^[a-zA-Z\s]+$/)
+          ]
+        ],
         username: [
           '',
-          [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]{4,20}$/)]
+          [Validators.required, Validators.pattern(/^[a-zA-Z0-9_@]{4,20}$/)]
         ],
-        email: ['', [Validators.required, Validators.email]],
+        email: [
+          '',
+          [Validators.required, this.emailValidator]
+        ],
         password: [
           '',
           [
@@ -40,6 +50,27 @@ export class RegisterComponent {
       },
       { validators: this.passwordsMatchValidator }
     );
+  }
+
+  // Custom email validator to check for valid TLD (including .com, .org, .net, etc.)
+  emailValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null; // Let required validator handle empty values
+    }
+    
+    // Check basic email format
+    const basicEmailPattern = /^[^\s@]+@[^\s@]+$/;
+    if (!basicEmailPattern.test(control.value)) {
+      return { invalidEmail: true };
+    }
+    
+    // Check for valid TLD (at least 2 characters, e.g., .com, .org, .net)
+    const tldPattern = /\.[a-zA-Z]{2,}$/;
+    if (!tldPattern.test(control.value)) {
+      return { invalidTld: true };
+    }
+    
+    return null;
   }
 
   passwordsMatchValidator(control: AbstractControl) {
@@ -57,7 +88,7 @@ export class RegisterComponent {
     return this.registerForm.controls;
   }
 
-  async onSubmit() {
+  onSubmit() {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
@@ -67,24 +98,24 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    try {
-      const { name, username, email, password } = this.registerForm.value;
-      await this.userService
-        .register({ name, username, email, password })
-        .toPromise();
-      
-      this.successMessage = 'Registration successful! Redirecting to login...';
-      
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-    } catch (err: any) {
-      this.errorMessage =
-        err?.error?.message ||
-        'Registration failed. Username or email might already exist or data is invalid.';
-    } finally {
-      this.loading = false;
-    }
+    const { name, username, email, password } = this.registerForm.value;
+    
+    this.userService.register({ name, username, email, password }).subscribe({
+      next: () => {
+        this.successMessage = 'Registration successful! Redirecting to login...';
+        this.loading = false;
+        
+        setTimeout(() => {
+          this.router.navigate(['/login']);
+        }, 2000);
+      },
+      error: (err: any) => {
+        this.errorMessage =
+          err?.error?.message ||
+          'Registration failed. Username or email might already exist or data is invalid.';
+        this.loading = false;
+      }
+    });
   }
 
   goToLogin() {

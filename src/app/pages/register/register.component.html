@@ -29,7 +29,9 @@
             style="display: block; margin-top: 0.25rem;"
             *ngIf="f.name.touched && f.name.errors"
           >
-            Name is required (min 2 characters)
+            <span *ngIf="f.name.errors['required']">Name is required</span>
+            <span *ngIf="f.name.errors['minlength']">Name must be at least 2 characters long</span>
+            <span *ngIf="f.name.errors['pattern']">Name can only contain letters and spaces (numbers not allowed)</span>
           </small>
         </div>
 
@@ -56,8 +58,8 @@
             *ngIf="f.username.touched && f.username.errors"
           >
             <span *ngIf="f.username.errors['required']">Username is required</span>
-            <span *ngIf="f.username.errors['pattern']"
-              >4-20 characters (letters, numbers, . _ - allowed)</span
+            <span *ngIf="f.username.errors['pattern'] && !f.username.errors['required']"
+              >Username must be 4-20 characters (letters, numbers, underscore _ and @ only)</span
             >
           </small>
         </div>
@@ -82,7 +84,8 @@
             *ngIf="f.email.touched && f.email.errors"
           >
             <span *ngIf="f.email.errors['required']">Email is required</span>
-            <span *ngIf="f.email.errors['email']">Please enter a valid email</span>
+            <span *ngIf="f.email.errors['invalidEmail'] && !f.email.errors['required']">Please enter a valid email address</span>
+            <span *ngIf="f.email.errors['invalidTld'] && !f.email.errors['required'] && !f.email.errors['invalidEmail']">Email must have a valid domain extension (e.g., .com, .org, .net)</span>
           </small>
         </div>
 
@@ -102,8 +105,8 @@
           ></p-password>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.password.touched && f.password.errors">
             <span *ngIf="f.password.errors['required']">Password is required</span>
-            <span *ngIf="f.password.errors['minlength']">Minimum 8 characters</span>
-            <span *ngIf="f.password.errors['pattern']">Must include uppercase, lowercase, number, and special character</span>
+            <span *ngIf="f.password.errors['minlength'] && !f.password.errors['required']">Password must be at least 8 characters long</span>
+            <span *ngIf="f.password.errors['pattern'] && !f.password.errors['required'] && !f.password.errors['minlength']">Password must include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)</span>
           </small>
         </div>
 
@@ -121,8 +124,9 @@
             [inputStyle]="{ width: '100%' }"
             inputStyleClass="p-inputtext-lg"
           ></p-password>
-          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="registerForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched)">
-            Passwords must match
+          <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="(f.confirmPassword.touched && f.confirmPassword.errors) || (registerForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched))">
+            <span *ngIf="f.confirmPassword.errors?.['required']">Confirm password is required</span>
+            <span *ngIf="registerForm.errors?.['mismatch'] && !f.confirmPassword.errors?.['required']">Passwords do not match. Please re-enter the same password</span>
           </small>
         </div>
 

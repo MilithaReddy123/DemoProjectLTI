@@ -80,6 +80,30 @@ export class HomeComponent implements OnInit {
       error: (err) => console.error('Failed to delete user', err)
     });
   }
+
+  hasValue(value: any): boolean {
+    return value !== null && value !== undefined && value !== '' && (typeof value !== 'string' || value.trim() !== '');
+  }
+
+  formatDate(date: string | Date | null | undefined): string {
+    if (!this.hasValue(date)) return '-';
+    const d = new Date(date as string | Date);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('en-US', { 
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  formatDateOnly(date: string | Date | null | undefined): string {
+    if (!this.hasValue(date)) return '-';
+    const d = new Date(date as string | Date);
+    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('en-US', { 
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  }
+
+  formatArray(arr: string[] | null | undefined): string[] {
+    return Array.isArray(arr) ? arr : [];
+  }
 }
 
 

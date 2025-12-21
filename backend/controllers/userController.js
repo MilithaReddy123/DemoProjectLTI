@@ -1,6 +1,31 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
+// Helper function to sanitize string values (null/empty string handling)
+const sanitizeValue = (value) => {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  return String(value).trim();
+};
+
+// Helper function to parse JSON fields
+const parseJsonField = (field) => {
+  if (!field) return [];
+  return typeof field === 'string' ? JSON.parse(field) : field;
+};
+
+// Helper function to extract credit card last 4 digits
+const extractCreditCardLast4 = (creditCard) => {
+  if (!creditCard) return null;
+  const digitsOnly = creditCard.replace(/\D/g, '');
+  return digitsOnly.length >= 4 ? digitsOnly.slice(-4) : null;
+};
+
+// Helper function to format timestamp
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return null;
+  return timestamp instanceof Date ? timestamp.toISOString() : timestamp;
+};
+
 // List all users with joined interests
 const getAllUsers = (pool) => async (req, res) => {
   try {
@@ -11,31 +36,43 @@ const getAllUsers = (pool) => async (req, res) => {
         u.email,
         u.username,
         u.created_at,
+        u.updated_at,
         ui.mobile,
+        ui.credit_card_last4,
         ui.state,
         ui.city,
         ui.gender,
         ui.hobbies,
         ui.tech_interests,
+        ui.address,
         ui.dob
       FROM users u
       LEFT JOIN user_interests ui ON u.id = ui.user_id
       ORDER BY u.created_at DESC
     `);
 
-    const users = rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      email: r.email,
-      username: r.username,
-      mobile: r.mobile || '',
-      state: r.state || '',
-      city: r.city || '',
-      gender: r.gender || 'Male',
-      hobbies: r.hobbies || [],
-      techInterests: r.tech_interests || [],
-      dob: r.dob || ''
-    }));
+    const users = rows.map((r) => {
+      const creditCardLast4 = sanitizeValue(r.credit_card_last4);
+      
+      return {
+        id: r.id,
+        name: r.name,
+        email: r.email,
+        username: r.username,
+        created_at: formatTimestamp(r.created_at),
+        updated_at: formatTimestamp(r.updated_at),
+        mobile: sanitizeValue(r.mobile),
+        creditCard: creditCardLast4 ? '************' + creditCardLast4 : null,
+        state: sanitizeValue(r.state),
+        city: sanitizeValue(r.city),
+        gender: r.gender || 'Male',
+        hobbies: Array.isArray(parseJsonField(r.hobbies)) ? parseJsonField(r.hobbies) : [],
+        techInterests: Array.isArray(parseJsonField(r.tech_interests)) ? parseJsonField(r.tech_interests) : [],
+        address: sanitizeValue(r.address),
+        dob: sanitizeValue(r.dob)
+      };
+    });
+
 
     return res.json(users);
   } catch (err) {
@@ -79,22 +116,22 @@ const getUserById = (pool) => async (req, res) => {
     }
 
     const user = rows[0];
+    const creditCardLast4 = sanitizeValue(user.credit_card_last4);
+
     return res.json({
       id: user.id,
       name: user.name,
       email: user.email,
       username: user.username,
-      mobile: user.mobile || '',
-      creditCard: user.credit_card_last4
-        ? '************' + user.credit_card_last4
-        : '',
-      state: user.state || '',
-      city: user.city || '',
+      mobile: sanitizeValue(user.mobile),
+      creditCard: creditCardLast4 ? '************' + creditCardLast4 : null,
+      state: sanitizeValue(user.state),
+      city: sanitizeValue(user.city),
       gender: user.gender || 'Male',
-      hobbies: user.hobbies || [],
-      techInterests: user.tech_interests || [],
-      address: user.address || '',
-      dob: user.dob || ''
+      hobbies: Array.isArray(parseJsonField(user.hobbies)) ? parseJsonField(user.hobbies) : [],
+      techInterests: Array.isArray(parseJsonField(user.tech_interests)) ? parseJsonField(user.tech_interests) : [],
+      address: sanitizeValue(user.address),
+      dob: sanitizeValue(user.dob)
     });
   } catch (err) {
     console.error('Error fetching user:', err.message);
@@ -125,18 +162,6 @@ const createUser = (pool) => async (req, res) => {
       dob
     } = req.body;
 
-    console.log('Received registration data:', {
-      name,
-      email,
-      mobile,
-      state,
-      city,
-      gender,
-      username,
-      hobbies: hobbies?.length,
-      techInterests: techInterests?.length,
-      hasDob: !!dob
-    });
 
     // Validate required fields (aligned with frontend form)
     if (!name || !email || !mobile || !state || !city || !username || !password) {
@@ -188,9 +213,6 @@ const createUser = (pool) => async (req, res) => {
       [userId, name, email, username, passwordHash]
     );
 
-    // Insert into user_interests table
-    const creditCardLast4 = creditCard ? creditCard.slice(-4) : null;
-
     await connection.query(
       `
       INSERT INTO user_interests 
@@ -199,21 +221,19 @@ const createUser = (pool) => async (req, res) => {
     `,
       [
         userId,
-        mobile,
-        creditCardLast4,
-        state,
-        city,
+        sanitizeValue(mobile),
+        extractCreditCardLast4(creditCard),
+        sanitizeValue(state),
+        sanitizeValue(city),
         gender || 'Male',
         JSON.stringify(hobbies),
         JSON.stringify(techInterests),
-        address || '',
-        dob || null
+        sanitizeValue(address),
+        sanitizeValue(dob)
       ]
     );
 
     await connection.commit();
-
-    console.log('✓ User created successfully:', username);
 
     return res.status(201).json({
       message: 'User created successfully',
@@ -222,7 +242,6 @@ const createUser = (pool) => async (req, res) => {
   } catch (err) {
     await connection.rollback();
     console.error('Error creating user:', err.message);
-    console.error('Full error:', err);
     return res.status(500).json({
       message: 'Internal server error: ' + err.message
     });
@@ -241,12 +260,14 @@ const updateUser = (pool) => async (req, res) => {
       name,
       email,
       mobile,
+      creditCard,
       state,
       city,
       gender,
       hobbies,
       techInterests,
-      address
+      address,
+      dob
     } = req.body;
 
     await connection.beginTransaction();
@@ -263,6 +284,8 @@ const updateUser = (pool) => async (req, res) => {
       [id]
     );
 
+    const creditCardLast4 = extractCreditCardLast4(creditCard);
+
     if (interestRows.length === 0) {
       // No interests row yet (e.g. user registered via /register) → INSERT one
       await connection.query(
@@ -273,15 +296,15 @@ const updateUser = (pool) => async (req, res) => {
       `,
         [
           id,
-          mobile || '',
-          null,
-          state || '',
-          city || '',
+          sanitizeValue(mobile),
+          creditCardLast4,
+          sanitizeValue(state),
+          sanitizeValue(city),
           gender || 'Male',
           JSON.stringify(hobbies || []),
           JSON.stringify(techInterests || []),
-          address || '',
-          null
+          sanitizeValue(address),
+          sanitizeValue(dob)
         ]
       );
     } else {
@@ -289,18 +312,20 @@ const updateUser = (pool) => async (req, res) => {
       await connection.query(
         `
         UPDATE user_interests 
-        SET mobile = ?, state = ?, city = ?, gender = ?, 
-            hobbies = ?, tech_interests = ?, address = ?
+        SET mobile = ?, credit_card_last4 = ?, state = ?, city = ?, gender = ?, 
+            hobbies = ?, tech_interests = ?, address = ?, dob = ?
         WHERE user_id = ?
       `,
         [
-          mobile,
-          state,
-          city,
-          gender,
+          sanitizeValue(mobile),
+          creditCardLast4,
+          sanitizeValue(state),
+          sanitizeValue(city),
+          gender || 'Male',
           JSON.stringify(hobbies || []),
           JSON.stringify(techInterests || []),
-          address || '',
+          sanitizeValue(address),
+          sanitizeValue(dob),
           id
         ]
       );
