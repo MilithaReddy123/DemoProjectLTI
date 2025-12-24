@@ -75,10 +75,22 @@
           <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <input pInputText [(ngModel)]="user.email" />
+                <div>
+                  <input 
+                    pInputText 
+                    [(ngModel)]="user.email" 
+                    (blur)="onFieldBlur(user, 'email')"
+                    [class.ng-invalid]="hasFieldError(user.id, 'email')"
+                    type="email"
+                    placeholder="email@example.com"
+                  />
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'email')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'email') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
-                <span *ngIf="hasValue(user.email)" class="p-d-flex p-ai-center" [pTooltip]="user.email.length > 30 ? user.email : null" tooltipPosition="top">
+                <span *ngIf="hasValue(user.email)" class="p-d-flex p-ai-center" [pTooltip]="getTooltipText(user.email, 30)" tooltipPosition="top">
                   <i class="pi pi-envelope p-mr-2" style="color: #6c757d;"></i>
                   <span style="display: inline-block; max-width: 100%;">{{ user.email }}</span>
                 </span>
@@ -89,7 +101,18 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <input pInputText [(ngModel)]="user.username" />
+                <div>
+                  <input 
+                    pInputText 
+                    [(ngModel)]="user.username" 
+                    (blur)="onFieldBlur(user, 'username')"
+                    [class.ng-invalid]="hasFieldError(user.id, 'username')"
+                    placeholder="4-20 characters"
+                  />
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'username')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'username') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <p-tag *ngIf="hasValue(user.username)" [value]="user.username" severity="info"></p-tag>
@@ -100,7 +123,19 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <input pInputText [(ngModel)]="user.mobile" />
+                <div>
+                  <input 
+                    pInputText 
+                    [(ngModel)]="user.mobile" 
+                    (blur)="onFieldBlur(user, 'mobile')"
+                    [class.ng-invalid]="hasFieldError(user.id, 'mobile')"
+                    placeholder="10-digit number"
+                    maxlength="10"
+                  />
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'mobile')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'mobile') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.mobile)" class="p-d-flex p-ai-center">
@@ -114,7 +149,19 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <input pInputText [(ngModel)]="user.creditCard" />
+                <div>
+                  <input 
+                    pInputText 
+                    [(ngModel)]="user.creditCard" 
+                    (blur)="onFieldBlur(user, 'creditCard')"
+                    [class.ng-invalid]="hasFieldError(user.id, 'creditCard')"
+                    placeholder="Last 4 digits or full 16-digit number"
+                    maxlength="16"
+                  />
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'creditCard')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'creditCard') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.creditCard)" class="p-d-flex p-ai-center">
@@ -128,13 +175,19 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-dropdown
-                  [options]="states"
-                  [(ngModel)]="user.state"
-                  (onChange)="onStateChange(user)"
-                  placeholder="Select state"
-                  [showClear]="true"
-                ></p-dropdown>
+                <div>
+                  <p-dropdown
+                    [options]="states"
+                    [(ngModel)]="user.state"
+                    (onChange)="onStateChange(user); onFieldBlur(user, 'state')"
+                    placeholder="Select state"
+                    [showClear]="true"
+                    [class.ng-invalid]="hasFieldError(user.id, 'state')"
+                  ></p-dropdown>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'state')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'state') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.state)">{{ user.state }}</span>
@@ -145,13 +198,20 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-dropdown
-                  [options]="cityOptions(user.state)"
-                  [(ngModel)]="user.city"
-                  placeholder="Select city"
-                  [showClear]="true"
-                  [disabled]="!user.state"
-                ></p-dropdown>
+                <div>
+                  <p-dropdown
+                    [options]="cityOptions(user.state)"
+                    [(ngModel)]="user.city"
+                    (onChange)="onFieldBlur(user, 'city')"
+                    placeholder="Select city"
+                    [showClear]="true"
+                    [disabled]="!user.state"
+                    [class.ng-invalid]="hasFieldError(user.id, 'city')"
+                  ></p-dropdown>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'city')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'city') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.city)">{{ user.city }}</span>
@@ -162,14 +222,21 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-dropdown
-                  [options]="genders.map(g => ({ label: g, value: g }))"
-                  [(ngModel)]="user.gender"
-                  placeholder="Select gender"
-                ></p-dropdown>
+                <div>
+                  <p-dropdown
+                    [options]="genderOptions"
+                    [(ngModel)]="user.gender"
+                    (onChange)="onFieldBlur(user, 'gender')"
+                    placeholder="Select gender"
+                    [class.ng-invalid]="hasFieldError(user.id, 'gender')"
+                  ></p-dropdown>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'gender')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'gender') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
-                <p-tag *ngIf="hasValue(user.gender)" [value]="user.gender" [severity]="user.gender === 'Male' ? 'success' : user.gender === 'Female' ? 'warning' : 'info'"></p-tag>
+                <p-tag *ngIf="hasValue(user.gender)" [value]="user.gender" [severity]="getGenderSeverity(user.gender)"></p-tag>
                 <span *ngIf="!hasValue(user.gender)" class="p-text-secondary">-</span>
               </ng-template>
             </p-cellEditor>
@@ -177,12 +244,19 @@
           <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-multiSelect
-                  [options]="hobbiesOptions"
-                  [(ngModel)]="user.hobbies"
-                  display="chip"
-                  defaultLabel="Select hobbies"
-                ></p-multiSelect>
+                <div>
+                  <p-multiSelect
+                    [options]="hobbiesOptions"
+                    [(ngModel)]="user.hobbies"
+                    (onChange)="onFieldBlur(user, 'hobbies')"
+                    display="chip"
+                    defaultLabel="Select hobbies"
+                    [class.ng-invalid]="hasFieldError(user.id, 'hobbies')"
+                  ></p-multiSelect>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'hobbies')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'hobbies') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <div *ngIf="formatArray(user.hobbies).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
@@ -195,12 +269,19 @@
           <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-multiSelect
-                  [options]="techOptions"
-                  [(ngModel)]="user.techInterests"
-                  display="chip"
-                  defaultLabel="Select tech"
-                ></p-multiSelect>
+                <div>
+                  <p-multiSelect
+                    [options]="techOptions"
+                    [(ngModel)]="user.techInterests"
+                    (onChange)="onFieldBlur(user, 'techInterests')"
+                    display="chip"
+                    defaultLabel="Select tech"
+                    [class.ng-invalid]="hasFieldError(user.id, 'techInterests')"
+                  ></p-multiSelect>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'techInterests')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'techInterests') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <div *ngIf="formatArray(user.techInterests).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
@@ -216,7 +297,7 @@
                 <textarea pInputTextarea rows="2" [(ngModel)]="user.address" placeholder="Address"></textarea>
               </ng-template>
               <ng-template pTemplate="output">
-                <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="user.address.length > 40 ? user.address : null" tooltipPosition="top">
+                <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="getTooltipText(user.address, 40)" tooltipPosition="top">
                   <i class="pi pi-map-marker p-mr-2" style="color: #6c757d;"></i>
                   <span style="display: inline-block; max-width: 100%; line-height: 1.5;">{{ user.address }}</span>
                 </span>
@@ -227,13 +308,20 @@
           <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <p-calendar
-                  [(ngModel)]="user.dob"
-                  dateFormat="yy-mm-dd"
-                  inputId="dob-{{ user.id || rowIndex }}"
-                  [showIcon]="true"
-                  appendTo="body"
-                ></p-calendar>
+                <div>
+                  <p-calendar
+                    [(ngModel)]="user.dob"
+                    (onSelect)="onFieldBlur(user, 'dob')"
+                    dateFormat="yy-mm-dd"
+                    inputId="dob-{{ user.id || rowIndex }}"
+                    [showIcon]="true"
+                    appendTo="body"
+                    [class.ng-invalid]="hasFieldError(user.id, 'dob')"
+                  ></p-calendar>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'dob')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'dob') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.dob)" class="p-d-flex p-ai-center">

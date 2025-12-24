@@ -6,7 +6,9 @@
       <label for="name">Name <span class="p-error">*</span></label>
       <input id="name" type="text" pInputText formControlName="name" placeholder="Full name" />
       <small class="p-error" *ngIf="f.name.touched && f.name.errors">
-        Name is required (min 2 characters)
+        <span *ngIf="f.name.errors?.['required']">Name is required</span>
+        <span *ngIf="f.name.errors?.['minlength']">Name must be at least 2 characters</span>
+        <span *ngIf="f.name.errors?.['hasNumbers']">Name cannot contain numbers</span>
       </small>
     </div>
 
@@ -15,16 +17,19 @@
       <label for="email">Email <span class="p-error">*</span></label>
       <input id="email" type="email" pInputText formControlName="email" placeholder="email@example.com" />
       <small class="p-error" *ngIf="f.email.touched && f.email.errors">
-        Valid email is required
+        <span *ngIf="f.email.errors?.['required']">Email is required</span>
+        <span *ngIf="f.email.errors?.['email'] && !f.email.errors?.['mustEndWithCom']">Please enter a valid email address</span>
+        <span *ngIf="f.email.errors?.['mustEndWithCom']">Email must end with .com</span>
       </small>
     </div>
 
     <!-- Mobile -->
     <div class="p-field p-col-12 p-md-6">
       <label for="mobile">Mobile <span class="p-error">*</span></label>
-      <input id="mobile" type="text" pInputText formControlName="mobile" placeholder="10-digit number" />
+      <input id="mobile" type="text" pInputText formControlName="mobile" placeholder="10-digit number" maxlength="10" />
       <small class="p-error" *ngIf="f.mobile.touched && f.mobile.errors">
-        Valid 10-digit mobile number required
+        <span *ngIf="f.mobile.errors?.['required']">Mobile number is required</span>
+        <span *ngIf="f.mobile.errors?.['pattern']">Mobile must be exactly 10 digits</span>
       </small>
     </div>
 
@@ -33,7 +38,8 @@
       <label for="creditCard">Credit Card <span class="p-error">*</span></label>
       <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16-digit number" maxlength="16" />
       <small class="p-error" *ngIf="f.creditCard.touched && f.creditCard.errors">
-        Valid 16-digit card number required
+        <span *ngIf="f.creditCard.errors?.['required']">Credit card number is required</span>
+        <span *ngIf="f.creditCard.errors?.['pattern']">Credit card must be exactly 16 digits</span>
       </small>
     </div>
 
@@ -42,7 +48,7 @@
       <label for="state">State <span class="p-error">*</span></label>
       <p-dropdown id="state" [options]="states" formControlName="state" placeholder="Select state" [showClear]="true"></p-dropdown>
       <small class="p-error" *ngIf="f.state.touched && f.state.errors">
-        State is required
+        <span *ngIf="f.state.errors?.['required']">State is required</span>
       </small>
     </div>
 
@@ -51,7 +57,7 @@
       <label for="city">City <span class="p-error">*</span></label>
       <p-dropdown id="city" [options]="cities" formControlName="city" placeholder="Select city" [showClear]="true" [disabled]="!f.state.value"></p-dropdown>
       <small class="p-error" *ngIf="f.city.touched && f.city.errors">
-        City is required
+        <span *ngIf="f.city.errors?.['required']">City is required</span>
       </small>
     </div>
 
@@ -76,7 +82,7 @@
         </div>
       </div>
       <small class="p-error" *ngIf="f.hobbies.touched && f.hobbies.errors">
-        Select at least one hobby
+        <span *ngIf="f.hobbies.errors?.['required']">Select at least one hobby</span>
       </small>
     </div>
 
@@ -85,7 +91,7 @@
       <label for="techInterests">Tech Interests <span class="p-error">*</span></label>
       <p-multiSelect id="techInterests" [options]="techOptions" formControlName="techInterests" placeholder="Select technologies" [showHeader]="false"></p-multiSelect>
       <small class="p-error" *ngIf="f.techInterests.touched && f.techInterests.errors">
-        Select at least one technology
+        <span *ngIf="f.techInterests.errors?.['required']">Select at least one technology</span>
       </small>
     </div>
 
@@ -100,7 +106,8 @@
       <label for="username">Username <span class="p-error">*</span></label>
       <input id="username" type="text" pInputText formControlName="username" placeholder="4-20 characters" [disabled]="isEditMode" />
       <small class="p-error" *ngIf="f.username.touched && f.username.errors">
-        Username required (4-20 chars, alphanumeric)
+        <span *ngIf="f.username.errors?.['required']">Username is required</span>
+        <span *ngIf="f.username.errors?.['pattern']">Username must be 4-20 characters (letters, numbers, _, @, -)</span>
       </small>
     </div>
 
@@ -109,7 +116,7 @@
       <label for="dob">Date of Birth <span class="p-error">*</span></label>
       <input id="dob" type="date" pInputText formControlName="dob" />
       <small class="p-error" *ngIf="f.dob.touched && f.dob.errors">
-        Date of birth is required
+        <span *ngIf="f.dob.errors?.['required']">Date of birth is required</span>
       </small>
     </div>
 
@@ -118,7 +125,9 @@
       <label for="password">Password <span class="p-error">*</span></label>
       <p-password id="password" formControlName="password" [feedback]="true" [toggleMask]="true" placeholder="Min 8 characters" styleClass="w-full" [inputStyle]="{ width: '100%' }"></p-password>
       <small class="p-error" *ngIf="f.password.touched && f.password.errors">
-        Min 8 chars with upper, lower, number, special char
+        <span *ngIf="f.password.errors?.['required']">Password is required</span>
+        <span *ngIf="f.password.errors?.['minlength']">Password must be at least 8 characters</span>
+        <span *ngIf="f.password.errors?.['pattern']">Password must contain uppercase, lowercase, number, and special character</span>
       </small>
     </div>
 

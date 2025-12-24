@@ -7,10 +7,11 @@ import {
   Output,
   SimpleChanges
 } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
+import { HttpClient } from '@angular/common/http';
+
 
 type DropdownOption<T> = { label: string; value: T };
 
@@ -69,15 +70,15 @@ export class UserFormComponent implements OnInit, OnChanges {
   private buildForm(): void {
     this.userForm = this.fb.group(
       {
-        name: ['', [Validators.required, Validators.minLength(2)]],
-        email: ['', [Validators.required, Validators.email]],
+        name: ['', [Validators.required, Validators.minLength(2), this.nameValidator.bind(this)]],
+        email: ['', [Validators.required, Validators.email, this.emailValidator.bind(this)]],
         mobile: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
         creditCard: ['', [Validators.required, Validators.pattern(/^\d{16}$/)]],
         state: [null, Validators.required],
         city: [null, Validators.required],
         gender: ['Male', Validators.required],
-        hobbies: [[], Validators.required],
-        techInterests: [[], Validators.required],
+        hobbies: [[], [Validators.required, this.arrayValidator.bind(this)]],
+        techInterests: [[], [Validators.required, this.arrayValidator.bind(this)]],
         address: [''],
         username: [
           '',
@@ -182,6 +183,28 @@ export class UserFormComponent implements OnInit, OnChanges {
     return pwd === cpwd ? null : { mismatch: true };
   }
 
+  private nameValidator(control: any) {
+    if (!control.value) return null;
+    const hasNumbers = /\d/.test(control.value);
+    return hasNumbers ? { hasNumbers: true } : null;
+  }
+
+  private emailValidator(control: any) {
+    if (!control.value) return null;
+    const email = control.value.trim();
+    if (!email.endsWith('.com')) {
+      return { mustEndWithCom: true };
+    }
+    return null;
+  }
+
+  private arrayValidator(control: any) {
+    if (!control.value || !Array.isArray(control.value) || control.value.length === 0) {
+      return { required: true };
+    }
+    return null;
+  }
+
   get f(): any {
     return this.userForm.controls;
   }
@@ -238,5 +261,3 @@ export class UserFormComponent implements OnInit, OnChanges {
     });
   }
 }
-
-
