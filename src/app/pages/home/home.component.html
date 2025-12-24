@@ -17,6 +17,8 @@
     ></button>
   </div>
 
+  <p-toast></p-toast>
+
   <!-- Table Card -->
   <p-card>
     <p-table
@@ -32,6 +34,7 @@
       responsiveLayout="scroll"
       [rowHover]="true"
       dataKey="id"
+      editMode="row"
       [style]="{ 'table-layout': 'fixed' }"
       styleClass="p-datatable-sm"
     >
@@ -63,85 +66,188 @@
           <th style="width: 8%; padding: 0.75rem;">Tech Interests</th>
           <th style="width: 10%; padding: 0.75rem;">Address</th>
           <th pSortableColumn="dob" style="width: 7%; padding: 0.75rem;">DOB <p-sortIcon field="dob"></p-sortIcon></th>
-          <th pSortableColumn="created_at" style="width: 7%; padding: 0.75rem;">Created <p-sortIcon field="created_at"></p-sortIcon></th>
           <th style="width: 5%; padding: 0.75rem;">Actions</th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-user>
-        <tr>
-          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.email)" class="p-d-flex p-ai-center" [pTooltip]="user.email.length > 30 ? user.email : null" tooltipPosition="top">
-              <i class="pi pi-envelope p-mr-2" style="color: #6c757d;"></i>
-              <span style="display: inline-block; max-width: 100%;">{{ user.email }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.email)" class="p-text-secondary">-</span>
+      <ng-template pTemplate="body" let-user let-rowIndex="rowIndex">
+        <tr [pEditableRow]="user">
+          <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <input pInputText [(ngModel)]="user.email" />
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.email)" class="p-d-flex p-ai-center" [pTooltip]="user.email.length > 30 ? user.email : null" tooltipPosition="top">
+                  <i class="pi pi-envelope p-mr-2" style="color: #6c757d;"></i>
+                  <span style="display: inline-block; max-width: 100%;">{{ user.email }}</span>
+                </span>
+                <span *ngIf="!hasValue(user.email)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <p-tag *ngIf="hasValue(user.username)" [value]="user.username" severity="info"></p-tag>
-            <span *ngIf="!hasValue(user.username)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <input pInputText [(ngModel)]="user.username" />
+              </ng-template>
+              <ng-template pTemplate="output">
+                <p-tag *ngIf="hasValue(user.username)" [value]="user.username" severity="info"></p-tag>
+                <span *ngIf="!hasValue(user.username)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.mobile)" class="p-d-flex p-ai-center">
-              <i class="pi pi-phone p-mr-2" style="color: #6c757d;"></i>
-              <span>{{ user.mobile }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.mobile)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <input pInputText [(ngModel)]="user.mobile" />
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.mobile)" class="p-d-flex p-ai-center">
+                  <i class="pi pi-phone p-mr-2" style="color: #6c757d;"></i>
+                  <span>{{ user.mobile }}</span>
+                </span>
+                <span *ngIf="!hasValue(user.mobile)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.creditCard)" class="p-d-flex p-ai-center">
-              <i class="pi pi-credit-card p-mr-2" style="color: #6c757d;"></i>
-              <span class="p-text-muted" style="font-family: monospace; font-size: 0.9rem; letter-spacing: 0.5px;">{{ user.creditCard }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.creditCard)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <input pInputText [(ngModel)]="user.creditCard" />
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.creditCard)" class="p-d-flex p-ai-center">
+                  <i class="pi pi-credit-card p-mr-2" style="color: #6c757d;"></i>
+                  <span class="p-text-muted" style="font-family: monospace; font-size: 0.9rem; letter-spacing: 0.5px;">{{ user.creditCard }}</span>
+                </span>
+                <span *ngIf="!hasValue(user.creditCard)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.state)">{{ user.state }}</span>
-            <span *ngIf="!hasValue(user.state)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-dropdown
+                  [options]="states"
+                  [(ngModel)]="user.state"
+                  (onChange)="onStateChange(user)"
+                  placeholder="Select state"
+                  [showClear]="true"
+                ></p-dropdown>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.state)">{{ user.state }}</span>
+                <span *ngIf="!hasValue(user.state)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.city)">{{ user.city }}</span>
-            <span *ngIf="!hasValue(user.city)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-dropdown
+                  [options]="cityOptions(user.state)"
+                  [(ngModel)]="user.city"
+                  placeholder="Select city"
+                  [showClear]="true"
+                  [disabled]="!user.state"
+                ></p-dropdown>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.city)">{{ user.city }}</span>
+                <span *ngIf="!hasValue(user.city)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <p-tag *ngIf="hasValue(user.gender)" [value]="user.gender" [severity]="user.gender === 'Male' ? 'success' : user.gender === 'Female' ? 'warning' : 'info'"></p-tag>
-            <span *ngIf="!hasValue(user.gender)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-dropdown
+                  [options]="genders.map(g => ({ label: g, value: g }))"
+                  [(ngModel)]="user.gender"
+                  placeholder="Select gender"
+                ></p-dropdown>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <p-tag *ngIf="hasValue(user.gender)" [value]="user.gender" [severity]="user.gender === 'Male' ? 'success' : user.gender === 'Female' ? 'warning' : 'info'"></p-tag>
+                <span *ngIf="!hasValue(user.gender)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
-            <div *ngIf="formatArray(user.hobbies).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
-              <p-chip *ngFor="let hobby of formatArray(user.hobbies)" [label]="hobby"></p-chip>
-            </div>
-            <span *ngIf="!formatArray(user.hobbies).length" class="p-text-secondary">-</span>
+          <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-multiSelect
+                  [options]="hobbiesOptions"
+                  [(ngModel)]="user.hobbies"
+                  display="chip"
+                  defaultLabel="Select hobbies"
+                ></p-multiSelect>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <div *ngIf="formatArray(user.hobbies).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
+                  <p-chip *ngFor="let hobby of formatArray(user.hobbies)" [label]="hobby"></p-chip>
+                </div>
+                <span *ngIf="!formatArray(user.hobbies).length" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
-            <div *ngIf="formatArray(user.techInterests).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
-              <p-chip *ngFor="let tech of formatArray(user.techInterests)" [label]="tech"></p-chip>
-            </div>
-            <span *ngIf="!formatArray(user.techInterests).length" class="p-text-secondary">-</span>
+          <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-multiSelect
+                  [options]="techOptions"
+                  [(ngModel)]="user.techInterests"
+                  display="chip"
+                  defaultLabel="Select tech"
+                ></p-multiSelect>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <div *ngIf="formatArray(user.techInterests).length" class="p-d-flex p-flex-wrap" style="gap: 0.25rem;">
+                  <p-chip *ngFor="let tech of formatArray(user.techInterests)" [label]="tech"></p-chip>
+                </div>
+                <span *ngIf="!formatArray(user.techInterests).length" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="user.address.length > 40 ? user.address : null" tooltipPosition="top">
-              <i class="pi pi-map-marker p-mr-2" style="color: #6c757d;"></i>
-              <span style="display: inline-block; max-width: 100%; line-height: 1.5;">{{ user.address }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.address)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <textarea pInputTextarea rows="2" [(ngModel)]="user.address" placeholder="Address"></textarea>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="user.address.length > 40 ? user.address : null" tooltipPosition="top">
+                  <i class="pi pi-map-marker p-mr-2" style="color: #6c757d;"></i>
+                  <span style="display: inline-block; max-width: 100%; line-height: 1.5;">{{ user.address }}</span>
+                </span>
+                <span *ngIf="!hasValue(user.address)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.dob)" class="p-d-flex p-ai-center">
-              <i class="pi pi-calendar p-mr-2" style="color: #007bff;"></i>
-              <span class="p-text-primary" style="font-weight: 500;">{{ formatDateOnly(user.dob) }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.dob)" class="p-text-secondary">-</span>
-          </td>
-          <td style="padding: 0.75rem; vertical-align: top;">
-            <span *ngIf="hasValue(user.created_at)" class="p-d-flex p-ai-center">
-              <i class="pi pi-clock p-mr-2" style="color: #6c757d;"></i>
-              <span class="p-text-secondary" style="font-size: 0.9rem;">{{ formatDate(user.created_at) }}</span>
-            </span>
-            <span *ngIf="!hasValue(user.created_at)" class="p-text-secondary">-</span>
+          <td pEditableColumn style="padding: 0.75rem; vertical-align: top;">
+            <p-cellEditor>
+              <ng-template pTemplate="input">
+                <p-calendar
+                  [(ngModel)]="user.dob"
+                  dateFormat="yy-mm-dd"
+                  inputId="dob-{{ user.id || rowIndex }}"
+                  [showIcon]="true"
+                  appendTo="body"
+                ></p-calendar>
+              </ng-template>
+              <ng-template pTemplate="output">
+                <span *ngIf="hasValue(user.dob)" class="p-d-flex p-ai-center">
+                  <i class="pi pi-calendar p-mr-2" style="color: #007bff;"></i>
+                  <span class="p-text-primary" style="font-weight: 500;">{{ formatDateOnly(user.dob) }}</span>
+                </span>
+                <span *ngIf="!hasValue(user.dob)" class="p-text-secondary">-</span>
+              </ng-template>
+            </p-cellEditor>
           </td>
           <td style="padding: 0.75rem; vertical-align: top; white-space: nowrap;">
-            <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info p-mr-1" (click)="openEditUser(user)" pTooltip="Edit" tooltipPosition="top"></button>
+            <button pButton pRipple type="button" icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info p-mr-1" pInitEditableRow (click)="onRowEditInit(user)" pTooltip="Edit inline" tooltipPosition="top"></button>
+            <button pButton pRipple type="button" icon="pi pi-check" class="p-button-rounded p-button-text p-button-success p-mr-1" pSaveEditableRow (click)="onRowEditSave(user)" pTooltip="Save" tooltipPosition="top"></button>
+            <button pButton pRipple type="button" icon="pi pi-times" class="p-button-rounded p-button-text p-button-secondary p-mr-2" pCancelEditableRow (click)="onRowEditCancel(user, rowIndex)" pTooltip="Cancel" tooltipPosition="top"></button>
             <button pButton pRipple type="button" icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" (click)="deleteUser(user)" pTooltip="Delete" tooltipPosition="top"></button>
           </td>
         </tr>
@@ -149,7 +255,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="13" class="p-text-center p-py-5">
+          <td colspan="12" class="p-text-center p-py-5">
             <i class="pi pi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
             <h4 class="p-mt-3 p-mb-2">No members found</h4>
             <p class="p-text-secondary">Add your first member to get started</p>
@@ -181,25 +287,6 @@
   >
     <app-user-form
       [user]="null"
-      (saved)="onUserSaved()"
-      (cancelled)="onDialogHide()"
-    ></app-user-form>
-  </p-dialog>
-
-  <!-- Edit Dialog -->
-  <p-dialog
-    [(visible)]="displayEditDialog"
-    [modal]="true"
-    [style]="{ width: '800px' }"
-    [maximizable]="true"
-    [draggable]="false"
-    [resizable]="false"
-    header="Edit Member"
-    (onHide)="onDialogHide()"
-    [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }"
-  >
-    <app-user-form
-      [user]="selectedUser"
       (saved)="onUserSaved()"
       (cancelled)="onDialogHide()"
     ></app-user-form>

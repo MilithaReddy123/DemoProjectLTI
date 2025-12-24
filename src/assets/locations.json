@@ -1,0 +1,10 @@
+{
+  "states": ["Telangana", "Andhra Pradesh"],
+  "citiesByState": {
+    "Telangana": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar"],
+    "Andhra Pradesh": ["Vijayawada", "Visakhapatnam", "Guntur", "Tirupati"]
+  }
+}
+
+
+

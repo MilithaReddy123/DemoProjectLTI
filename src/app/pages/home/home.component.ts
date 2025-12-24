@@ -2,6 +2,13 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { Table } from 'primeng/table';
+import { HttpClient } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
+
+interface LocationData {
+  states: string[];
+  citiesByState: Record<string, string[]>;
+}
 
 @Component({
   selector: 'app-home',
@@ -12,24 +19,43 @@ export class HomeComponent implements OnInit {
   
   users: User[] = [];
   displayAddDialog = false;
-  displayEditDialog = false;
-  selectedUser: User | null = null;
   loading = false;
+  clonedUsers: { [id: string]: User } = {};
 
-  constructor(private userService: UserService) {}
+  states: { label: string; value: string | null }[] = [{ label: 'Select State', value: null }];
+  citiesByState: Record<string, string[]> = {};
+  hobbiesOptions = [
+    { label: 'Reading', value: 'Reading' },
+    { label: 'Music', value: 'Music' },
+    { label: 'Sports', value: 'Sports' }
+  ];
+  techOptions = [
+    { label: 'Angular', value: 'Angular' },
+    { label: 'React', value: 'React' },
+    { label: 'Node.js', value: 'Node.js' },
+    { label: 'Java', value: 'Java' }
+  ];
+  genders = ['Male', 'Female', 'Other'];
+
+  constructor(
+    private userService: UserService,
+    private http: HttpClient,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+    this.loadLocations();
   }
 
   loadUsers(): void {
     this.loading = true;
     this.userService.getUsers().subscribe({
-      next: (data) => {
+      next: (data: User[]) => {
         this.users = data;
         this.loading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to load users', err);
         this.loading = false;
       }
@@ -37,34 +63,16 @@ export class HomeComponent implements OnInit {
   }
 
   openAddUser(): void {
-    this.selectedUser = null;
     this.displayAddDialog = true;
-  }
-
-  openEditUser(user: User): void {
-    if (!user.id) return;
-    
-    // Fetch full user details from backend for editing
-    this.userService.getUserById(user.id).subscribe({
-      next: (fullUser) => {
-        this.selectedUser = fullUser;
-        this.displayEditDialog = true;
-      },
-      error: (err) => console.error('Failed to load user details', err)
-    });
   }
 
   onUserSaved(): void {
     this.displayAddDialog = false;
-    this.displayEditDialog = false;
-    this.selectedUser = null;
     this.loadUsers();
   }
 
   onDialogHide(): void {
     this.displayAddDialog = false;
-    this.displayEditDialog = false;
-    this.selectedUser = null;
   }
 
   deleteUser(user: User): void {
@@ -77,7 +85,85 @@ export class HomeComponent implements OnInit {
 
     this.userService.deleteUser(user.id).subscribe({
       next: () => this.loadUsers(),
-      error: (err) => console.error('Failed to delete user', err)
+      error: (err: any) => console.error('Failed to delete user', err)
+    });
+  }
+
+  onRowEditInit(user: User): void {
+    if (!user.id) return;
+    this.clonedUsers[user.id] = {
+      ...user,
+      hobbies: Array.isArray(user.hobbies) ? [...user.hobbies] : [],
+      techInterests: Array.isArray(user.techInterests) ? [...user.techInterests] : []
+    };
+  }
+
+  onRowEditSave(user: User): void {
+    if (!user.id) return;
+
+    this.userService.updateUser(user.id, { ...user }).subscribe({
+      next: () => {
+        delete this.clonedUsers[user.id as string];
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Updated',
+          detail: 'Member updated successfully'
+        });
+      },
+      error: (err: any) => {
+        console.error('Failed to update user', err);
+        const original = this.clonedUsers[user.id as string];
+        if (original) {
+          const index = this.users.findIndex((u) => u.id === user.id);
+          if (index > -1) {
+            this.users[index] = { ...original };
+          }
+          delete this.clonedUsers[user.id as string];
+        }
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Update failed',
+          detail: err?.error?.message || 'Could not save changes'
+        });
+      }
+    });
+  }
+
+  onRowEditCancel(user: User, index: number): void {
+    if (!user.id) return;
+    const original = this.clonedUsers[user.id];
+    if (original) {
+      this.users[index] = { ...original };
+      delete this.clonedUsers[user.id];
+    }
+  }
+
+  onStateChange(user: User): void {
+    if (!user.state) {
+      user.city = '';
+      return;
+    }
+    const availableCities = this.citiesByState[user.state] || [];
+    if (user.city && !availableCities.includes(user.city)) {
+      user.city = '';
+    }
+  }
+
+  cityOptions(state: string | null | undefined): { label: string; value: string }[] {
+    const cities = state ? this.citiesByState[state] || [] : [];
+    return cities.map((c) => ({ label: c, value: c }));
+  }
+
+  private loadLocations(): void {
+    this.http.get<LocationData>('assets/locations.json').subscribe({
+      next: (data: LocationData) => {
+        this.citiesByState = data.citiesByState ?? {};
+        this.states = [
+          { label: 'Select State', value: null },
+          ...(data.states ?? []).map((s: string) => ({ label: s, value: s }))
+        ];
+      },
+      error: (err: any) => console.error('Failed to load locations.json', err)
     });
   }
 

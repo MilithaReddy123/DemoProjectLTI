@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MessageService } from 'primeng/api';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -30,6 +31,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { ChipModule } from 'primeng/chip';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
+import { ToastModule } from 'primeng/toast';
+import { CalendarModule } from 'primeng/calendar';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent],
@@ -56,9 +59,11 @@ import { MessageModule } from 'primeng/message';
     TooltipModule,
     ChipModule,
     TagModule,
-    MessageModule
+    MessageModule,
+    ToastModule,
+    CalendarModule
   ],
-  providers: [],
+  providers: [MessageService],
   bootstrap: [AppComponent]
 })
 export class AppModule {}

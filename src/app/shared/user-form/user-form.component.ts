@@ -7,9 +7,17 @@ import {
   Output,
   SimpleChanges
 } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
+
+type DropdownOption<T> = { label: string; value: T };
+
+interface LocationData {
+  states: string[];
+  citiesByState: Record<string, string[]>;
+}
 
 @Component({
   selector: 'app-user-form',
@@ -23,24 +31,10 @@ export class UserFormComponent implements OnInit, OnChanges {
   userForm!: FormGroup;
   submitting = false;
 
-  states = [
-    { label: 'Select State', value: null },
-    { label: 'Telangana', value: 'Telangana' },
-    { label: 'Andhra Pradesh', value: 'Andhra Pradesh' }
-  ];
-
-  allCities = [
-    {
-      state: 'Telangana',
-      cities: ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar']
-    },
-    {
-      state: 'Andhra Pradesh',
-      cities: ['Vijayawada', 'Visakhapatnam', 'Guntur', 'Tirupati']
-    }
-  ];
-
-  cities: { label: string; value: string }[] = [];
+  states: DropdownOption<string | null>[] = [{ label: 'Select State', value: null }];
+  cities: DropdownOption<string>[] = [];
+  private citiesByState: Record<string, string[]> = {};
+  private locationsLoaded = false;
 
   hobbiesOptions = [
     { label: 'Reading', value: 'Reading' },
@@ -55,10 +49,15 @@ export class UserFormComponent implements OnInit, OnChanges {
     { label: 'Java', value: 'Java' }
   ];
 
-  constructor(private fb: FormBuilder, private userService: UserService) {}
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit(): void {
     this.buildForm();
+    this.loadLocations();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -107,13 +106,31 @@ export class UserFormComponent implements OnInit, OnChanges {
     this.patchForm();
   }
 
+  private loadLocations(): void {
+    this.http.get<LocationData>('assets/locations.json').subscribe({
+      next: (data) => {
+        this.citiesByState = data.citiesByState ?? {};
+        this.states = [
+          { label: 'Select State', value: null },
+          ...(data.states ?? []).map((s) => ({ label: s, value: s }))
+        ];
+        this.locationsLoaded = true;
+
+        // If a state is already selected (edit mode / patched value), refresh city list now.
+        const currentState = this.userForm?.get('state')?.value;
+        if (currentState) {
+          this.onStateChange(currentState);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load locations.json', err);
+        this.locationsLoaded = true; // prevent blocking state changes forever
+      }
+    });
+  }
+
   private patchForm(): void {
     if (this.user) {
-      // Load cities for the user's state first
-      if (this.user.state) {
-        this.onStateChange(this.user.state);
-      }
-
       // Format date for input type="date"
       let formattedDob = this.user.dob;
       if (this.user.dob) {
@@ -136,6 +153,11 @@ export class UserFormComponent implements OnInit, OnChanges {
         username: this.user.username,
         dob: formattedDob
       });
+
+      // Refresh cities after patching (guarded until locations are loaded)
+      if (this.user.state) {
+        this.onStateChange(this.user.state);
+      }
 
       // Password is not required for editing
       this.userForm.get('password')?.clearValidators();
@@ -169,12 +191,16 @@ export class UserFormComponent implements OnInit, OnChanges {
   }
 
   onStateChange(state: string): void {
-    const match = this.allCities.find((x) => x.state === state);
-    this.cities = match ? match.cities.map((c) => ({ label: c, value: c })) : [];
-    
+    if (!this.locationsLoaded) {
+      return;
+    }
+
+    const citiesForState = this.citiesByState?.[state] ?? [];
+    this.cities = citiesForState.map((c) => ({ label: c, value: c }));
+
     // Only clear city if state changed and current city is not in new list
     const currentCity = this.userForm.get('city')?.value;
-    if (currentCity && !this.cities.find(c => c.value === currentCity)) {
+    if (currentCity && !this.cities.find((c) => c.value === currentCity)) {
       this.userForm.get('city')?.setValue(null);
     }
   }
