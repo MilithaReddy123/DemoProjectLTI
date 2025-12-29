@@ -4,6 +4,8 @@ import { User } from '../../models/user.model';
 import { Table } from 'primeng/table';
 import { HttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 interface LocationData {
   states: string[];
@@ -18,10 +20,35 @@ export class HomeComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
   
   users: User[] = [];
+  /**
+   * Snapshot of the last loaded server state (keyed by userId).
+   * Used as the baseline to determine what changed, regardless of how the UI mutates `users` while editing.
+   */
+  private baselineUsers: Record<string, User> = {};
   displayAddDialog = false;
+  displayDeleteDialog = false;
+  userToDelete: User | null = null;
   loading = false;
-  clonedUsers: { [id: string]: User } = {};
   fieldErrors: { [userId: string]: { [field: string]: string } } = {};
+  savingChanges = false;
+
+  /**
+   * Stores all pending edits across the table (keyed by userId).
+   * Requirement: this object is maintained by `celledited(...)` and later persisted by `savechanges()`.
+   */
+  editedRows: Record<
+    string,
+    {
+      original: User;
+      last: Record<string, any>;
+      events: Array<{
+        field: string;
+        previousValue: any;
+        currentValue: any;
+        at: string;
+      }>;
+    }
+  > = {};
 
   states: { label: string; value: string | null }[] = [{ label: 'Select State', value: null }];
   citiesByState: Record<string, string[]> = {};
@@ -57,6 +84,11 @@ export class HomeComponent implements OnInit {
     this.userService.getUsers().subscribe({
       next: (data: User[]) => {
         this.users = data;
+        // Refresh baseline from latest server state (deep clone to avoid accidental mutations).
+        this.baselineUsers = {};
+        data.forEach((u) => {
+          if (u.id) this.baselineUsers[u.id] = this.cloneUser(u);
+        });
         this.loading = false;
       },
       error: (err: any) => {
@@ -80,97 +112,203 @@ export class HomeComponent implements OnInit {
   }
 
   deleteUser(user: User): void {
+    // Open PrimeNG dialog instead of browser confirm().
     if (!user.id) return;
+    this.userToDelete = user;
+    this.displayDeleteDialog = true;
+  }
 
-    const confirmed = confirm(`Delete user "${user.name}"?`);
-    if (!confirmed) {
+  cancelDelete(): void {
+    this.displayDeleteDialog = false;
+    this.userToDelete = null;
+  }
+
+  confirmDelete(): void {
+    const user = this.userToDelete;
+    if (!user?.id) {
+      this.cancelDelete();
       return;
     }
 
+    this.loading = true;
     this.userService.deleteUser(user.id).subscribe({
-      next: () => this.loadUsers(),
-      error: (err: any) => console.error('Failed to delete user', err)
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Deleted',
+          detail: `Deleted "${user.name}".`,
+          life: 2500
+        });
+        this.cancelDelete();
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        console.error('Failed to delete user', err);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Delete failed',
+          detail: err?.error?.message || 'Could not delete user. Please try again.'
+        });
+      }
     });
   }
 
-  onRowEditInit(user: User): void {
-    if (!user.id) return;
-    
-    const creditCardLast4 = this.extractCreditCardLast4(user.creditCard);
-    
-    this.clonedUsers[user.id] = {
-      ...user,
-      creditCard: creditCardLast4,
-      hobbies: this.ensureArray(user.hobbies),
-      techInterests: this.ensureArray(user.techInterests)
-    };
-    
-    user.creditCard = creditCardLast4;
-    this.fieldErrors[user.id] = {};
+  hasPendingChanges(): boolean {
+    return Object.keys(this.editedRows).length > 0;
   }
 
-  onRowEditSave(user: User): void {
-    if (!user.id) return;
+  /**
+   * Called whenever a cell edit is completed.
+   * - Tracks edits inside `editedRows` (per user id)
+   * - Stores an event history (field + previous/current values)
+   * - Re-validates the edited row and updates `fieldErrors`
+   */
+  celledited(event: any): void {
+    const user: User | undefined = (event?.data as User) ?? (event?.rowData as User);
+    const field: string | undefined =
+      event?.field ?? event?.column?.field ?? event?.columnField ?? event?.dataField;
 
-    this.processCreditCard(user);
+    if (!user?.id || !field) return;
+
+    // Ensure we keep data normalized as users type (trim strings, arrays, mobile digits, etc.)
     this.normalizeUserData(user);
+    this.processCreditCard(user);
 
+    if (!this.editedRows[user.id]) {
+      // Use the last loaded server snapshot as the true "original" baseline.
+      const original = this.cloneUser(this.baselineUsers[user.id] ?? user);
+      this.editedRows[user.id] = {
+        original,
+        last: { ...original } as any,
+        events: []
+      };
+    }
+
+    const rowState = this.editedRows[user.id];
+    const previousValue =
+      event?.originalValue ?? event?.previousValue ?? rowState.last[field];
+    const currentValue = (user as any)[field];
+
+    rowState.last[field] = currentValue;
+
+    // Only store an event when the value actually changed.
+    if (previousValue !== currentValue) {
+      rowState.events.push({
+        field,
+        previousValue,
+        currentValue,
+        at: new Date().toISOString()
+      });
+    }
+
+    // Validate the whole row but only update the edited field error for UI.
     const errors = this.validateUser(user);
-    if (Object.keys(errors).length > 0) {
-      this.fieldErrors[user.id] = errors;
+    this.upsertFieldError(user.id, field, errors[field]);
+
+    // If the row matches the original (no real diffs), remove it from pending edits.
+    if (!this.isRowDirty(user.id, user)) {
+      delete this.editedRows[user.id];
+      delete this.fieldErrors[user.id];
+    }
+  }
+
+  savechanges(): void {
+    if (this.savingChanges || this.loading) return;
+
+    const userIds = Object.keys(this.editedRows);
+    if (userIds.length === 0) {
       this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: `Please fix the errors before saving. Check fields: ${Object.keys(errors).join(', ')}`
+        severity: 'info',
+        summary: 'No changes',
+        detail: 'There are no pending edits to save.'
       });
       return;
     }
 
-    delete this.fieldErrors[user.id];
+    // Validate all pending rows before doing any API calls.
+    const invalidIds: string[] = [];
+    for (const id of userIds) {
+      const user = this.users.find((u) => u.id === id);
+      if (!user) continue;
+      const errors = this.validateUser(user);
+      if (Object.keys(errors).length > 0) {
+        this.fieldErrors[id] = errors;
+        invalidIds.push(id);
+      }
+    }
+
+    if (invalidIds.length > 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validation Error',
+        detail: 'Please fix validation errors before saving.'
+      });
+      return;
+    }
+
+    this.savingChanges = true;
     this.loading = true;
-    
-    this.userService.updateUser(user.id, this.prepareUserDataForUpdate(user)).subscribe({
-      next: () => this.handleSaveSuccess(user.id!),
-      error: (err: any) => this.handleSaveError(err, user)
-    });
-  }
 
-  private handleSaveSuccess(userId: string): void {
-    delete this.clonedUsers[userId];
-    this.loading = false;
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Saved Successfully',
-      detail: 'Member updated successfully',
-      life: 3000
-    });
-    this.loadUsers();
-  }
+    const requests = userIds
+      .map((id) => {
+        const user = this.users.find((u) => u.id === id);
+        if (!user) return null;
+        return this.userService.updateUser(id, this.prepareUserDataForUpdate(user)).pipe(
+          map(() => ({ id, ok: true as const })),
+          catchError((error) => of({ id, ok: false as const, error }))
+        );
+      })
+      .filter((r): r is NonNullable<typeof r> => !!r);
 
-  private handleSaveError(err: any, user: User): void {
-    console.error('Failed to update user', err);
-    this.loading = false;
-    const original = this.clonedUsers[user.id!];
-    if (original) {
-      const index = this.users.findIndex((u) => u.id === user.id);
-      if (index > -1) this.users[index] = { ...original };
-      delete this.clonedUsers[user.id!];
-    }
-    this.messageService.add({
-      severity: 'error',
-      summary: 'Update failed',
-      detail: err?.error?.message || 'Could not save changes. Please try again.'
-    });
-  }
+    forkJoin(requests).subscribe({
+      next: (results) => {
+        const successIds = results.filter((r) => r.ok).map((r) => r.id);
+        const failed = results.filter((r) => !r.ok);
 
-  onRowEditCancel(user: User, index: number): void {
-    if (!user.id) return;
-    const original = this.clonedUsers[user.id];
-    if (original) {
-      this.users[index] = { ...original };
-      delete this.clonedUsers[user.id];
-    }
-    delete this.fieldErrors[user.id];
+        successIds.forEach((id) => {
+          delete this.editedRows[id];
+          delete this.fieldErrors[id];
+        });
+
+        this.savingChanges = false;
+        this.loading = false;
+
+        if (failed.length === 0) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Saved Successfully',
+            detail: `Saved ${successIds.length} member(s).`,
+            life: 3000
+          });
+          this.loadUsers();
+          return;
+        }
+
+        // Revert failed rows to their original snapshots and keep them pending.
+        failed.forEach((f: any) => {
+          const state = this.editedRows[f.id];
+          if (!state?.original) return;
+          const idx = this.users.findIndex((u) => u.id === f.id);
+          if (idx > -1) this.users[idx] = { ...state.original };
+        });
+
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Partial save',
+          detail: `Saved ${successIds.length} member(s). Failed ${failed.length}. Please retry.`
+        });
+      },
+      error: () => {
+        this.savingChanges = false;
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Save failed',
+          detail: 'Could not save changes. Please try again.'
+        });
+      }
+    });
   }
 
   onStateChange(user: User): void {
@@ -259,7 +397,7 @@ export class HomeComponent implements OnInit {
   }
 
   private processCreditCard(user: User): void {
-    const originalUser = this.clonedUsers[user.id!];
+    const originalUser = this.editedRows[user.id!]?.original;
     const currentCard = String(user.creditCard || '').replace(/\D/g, '');
     
     if (currentCard.length === 16) {
@@ -397,6 +535,7 @@ export class HomeComponent implements OnInit {
 
     return {
       name: user.name,
+      username: user.username,
       email: user.email,
       mobile: user.mobile,
       creditCard: user.creditCard,
@@ -408,6 +547,34 @@ export class HomeComponent implements OnInit {
       address: user.address || '',
       dob: formattedDob
     };
+  }
+
+  private cloneUser(user: User): User {
+    // Good enough for this UI use-case (serializable fields). Avoids mutating originals.
+    return JSON.parse(JSON.stringify(user)) as User;
+  }
+
+  private upsertFieldError(userId: string, field: string, message: string | undefined): void {
+    if (!this.fieldErrors[userId]) this.fieldErrors[userId] = {};
+
+    if (message) {
+      this.fieldErrors[userId][field] = message;
+      return;
+    }
+
+    delete this.fieldErrors[userId][field];
+    if (Object.keys(this.fieldErrors[userId]).length === 0) {
+      delete this.fieldErrors[userId];
+    }
+  }
+
+  private isRowDirty(userId: string, current: User): boolean {
+    const original = this.editedRows[userId]?.original;
+    if (!original) return false;
+    return (
+      JSON.stringify(this.prepareUserDataForUpdate(original)) !==
+      JSON.stringify(this.prepareUserDataForUpdate(current))
+    );
   }
 }
 

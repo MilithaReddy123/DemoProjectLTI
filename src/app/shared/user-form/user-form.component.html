@@ -1,8 +1,8 @@
 <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
-  <div class="p-fluid p-formgrid p-grid">
+  <div class="p-fluid formgrid grid">
     
     <!-- Name -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="name">Name <span class="p-error">*</span></label>
       <input id="name" type="text" pInputText formControlName="name" placeholder="Full name" />
       <small class="p-error" *ngIf="f.name.touched && f.name.errors">
@@ -13,7 +13,7 @@
     </div>
 
     <!-- Email -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="email">Email <span class="p-error">*</span></label>
       <input id="email" type="email" pInputText formControlName="email" placeholder="email@example.com" />
       <small class="p-error" *ngIf="f.email.touched && f.email.errors">
@@ -24,7 +24,7 @@
     </div>
 
     <!-- Mobile -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="mobile">Mobile <span class="p-error">*</span></label>
       <input id="mobile" type="text" pInputText formControlName="mobile" placeholder="10-digit number" maxlength="10" />
       <small class="p-error" *ngIf="f.mobile.touched && f.mobile.errors">
@@ -34,7 +34,7 @@
     </div>
 
     <!-- Credit Card -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="creditCard">Credit Card <span class="p-error">*</span></label>
       <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16-digit number" maxlength="16" />
       <small class="p-error" *ngIf="f.creditCard.touched && f.creditCard.errors">
@@ -44,7 +44,7 @@
     </div>
 
     <!-- State -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="state">State <span class="p-error">*</span></label>
       <p-dropdown id="state" [options]="states" formControlName="state" placeholder="Select state" [showClear]="true"></p-dropdown>
       <small class="p-error" *ngIf="f.state.touched && f.state.errors">
@@ -53,7 +53,7 @@
     </div>
 
     <!-- City -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="city">City <span class="p-error">*</span></label>
       <p-dropdown id="city" [options]="cities" formControlName="city" placeholder="Select city" [showClear]="true" [disabled]="!f.state.value"></p-dropdown>
       <small class="p-error" *ngIf="f.city.touched && f.city.errors">
@@ -62,23 +62,23 @@
     </div>
 
     <!-- Gender -->
-    <div class="p-field p-col-12">
+    <div class="field col-12">
       <label>Gender <span class="p-error">*</span></label>
-      <div class="p-formgroup-inline p-mt-2">
-        <div class="p-field-radiobutton" *ngFor="let g of ['Male','Female','Other']">
+      <div class="flex flex-wrap gap-3 mt-2">
+        <div class="field-radiobutton" *ngFor="let g of ['Male','Female','Other']">
           <p-radioButton [inputId]="'gender-' + g" name="gender" [value]="g" formControlName="gender"></p-radioButton>
-          <label [for]="'gender-' + g" class="p-ml-2">{{ g }}</label>
+          <label [for]="'gender-' + g" class="ml-2">{{ g }}</label>
         </div>
       </div>
     </div>
 
     <!-- Hobbies -->
-    <div class="p-field p-col-12">
+    <div class="field col-12">
       <label>Hobbies <span class="p-error">*</span></label>
-      <div class="p-formgroup-inline p-mt-2">
-        <div class="p-field-checkbox" *ngFor="let h of hobbiesOptions">
+      <div class="flex flex-wrap gap-3 mt-2">
+        <div class="field-checkbox" *ngFor="let h of hobbiesOptions">
           <p-checkbox [inputId]="'hobby-' + h.value" [value]="h.value" formControlName="hobbies"></p-checkbox>
-          <label [for]="'hobby-' + h.value" class="p-ml-2">{{ h.label }}</label>
+          <label [for]="'hobby-' + h.value" class="ml-2">{{ h.label }}</label>
         </div>
       </div>
       <small class="p-error" *ngIf="f.hobbies.touched && f.hobbies.errors">
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Tech Interests -->
-    <div class="p-field p-col-12">
+    <div class="field col-12">
       <label for="techInterests">Tech Interests <span class="p-error">*</span></label>
       <p-multiSelect id="techInterests" [options]="techOptions" formControlName="techInterests" placeholder="Select technologies" [showHeader]="false"></p-multiSelect>
       <small class="p-error" *ngIf="f.techInterests.touched && f.techInterests.errors">
@@ -96,13 +96,13 @@
     </div>
 
     <!-- Address -->
-    <div class="p-field p-col-12">
+    <div class="field col-12">
       <label for="address">Address</label>
       <textarea id="address" pInputTextarea rows="3" formControlName="address" placeholder="Full address"></textarea>
     </div>
 
     <!-- Username -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="username">Username <span class="p-error">*</span></label>
       <input id="username" type="text" pInputText formControlName="username" placeholder="4-20 characters" [disabled]="isEditMode" />
       <small class="p-error" *ngIf="f.username.touched && f.username.errors">
@@ -112,7 +112,7 @@
     </div>
 
     <!-- DOB -->
-    <div class="p-field p-col-12 p-md-6">
+    <div class="field col-12 md:col-6">
       <label for="dob">Date of Birth <span class="p-error">*</span></label>
       <input id="dob" type="date" pInputText formControlName="dob" />
       <small class="p-error" *ngIf="f.dob.touched && f.dob.errors">
@@ -121,7 +121,7 @@
     </div>
 
     <!-- Password (Add Mode Only) -->
-    <div class="p-field p-col-12 p-md-6" *ngIf="!isEditMode">
+    <div class="field col-12 md:col-6" *ngIf="!isEditMode">
       <label for="password">Password <span class="p-error">*</span></label>
       <p-password id="password" formControlName="password" [feedback]="true" [toggleMask]="true" placeholder="Min 8 characters" styleClass="w-full" [inputStyle]="{ width: '100%' }"></p-password>
       <small class="p-error" *ngIf="f.password.touched && f.password.errors">
@@ -132,7 +132,7 @@
     </div>
 
     <!-- Confirm Password (Add Mode Only) -->
-    <div class="p-field p-col-12 p-md-6" *ngIf="!isEditMode">
+    <div class="field col-12 md:col-6" *ngIf="!isEditMode">
       <label for="confirmPassword">Confirm Password <span class="p-error">*</span></label>
       <p-password id="confirmPassword" formControlName="confirmPassword" [feedback]="false" [toggleMask]="true" placeholder="Re-enter password" styleClass="w-full" [inputStyle]="{ width: '100%' }"></p-password>
       <small class="p-error" *ngIf="userForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched)">
@@ -143,8 +143,8 @@
   </div>
 
   <!-- Actions -->
-  <div class="p-d-flex p-jc-end p-mt-4">
-    <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-text p-mr-2" (click)="onCancel()"></button>
+  <div class="flex justify-content-end mt-4 gap-2">
+    <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-text" (click)="onCancel()"></button>
     <button pButton type="submit" [label]="isEditMode ? 'Update' : 'Save'" [icon]="isEditMode ? 'pi pi-check' : 'pi pi-save'" [loading]="submitting" class="p-button-success"></button>
   </div>
 </form>
