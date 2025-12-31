@@ -22,22 +22,107 @@
   <!-- Table Card -->
   <p-card>
     <!-- Table Actions (top-right) -->
-    <div class="p-d-flex p-jc-end p-ai-center p-mb-2">
+    <div class="p-d-flex p-jc-between p-ai-center p-mb-2" style="gap: 0.5rem;">
       <button
         pButton
         type="button"
-        label="Save Changes"
-        icon="pi pi-save"
-        (click)="savechanges()"
-        [disabled]="loading || savingChanges"
-        [loading]="savingChanges"
-        class="p-button-primary"
+        icon="pi pi-filter"
+        label="Filters"
+        class="p-button-text"
+        (click)="toggleFilters()"
       ></button>
+
+      <div class="p-d-flex p-ai-center" style="gap: 0.5rem;">
+        <button
+          pButton
+          type="button"
+          label="Clear"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="clearFilters()"
+          [disabled]="loading || savingChanges"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Save Changes"
+          icon="pi pi-save"
+          (click)="savechanges()"
+          [disabled]="loading || savingChanges"
+          [loading]="savingChanges"
+          class="p-button-primary"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div *ngIf="showFilters" class="p-fluid p-mb-3">
+      <div class="formgrid grid">
+        <div class="field col-12 md:col-4">
+          <label for="filterName">Name</label>
+          <input
+            id="filterName"
+            pInputText
+            type="text"
+            placeholder="Search by name"
+            [(ngModel)]="filterModel.name"
+            (ngModelChange)="applyLocalFilters()"
+          />
+        </div>
+
+        <div class="field col-12 md:col-4">
+          <label for="filterState">State</label>
+          <p-dropdown
+            id="filterState"
+            [options]="stateFilterOptions"
+            [(ngModel)]="filterModel.state"
+            (onChange)="applyLocalFilters()"
+            [showClear]="true"
+            placeholder="All States"
+          ></p-dropdown>
+        </div>
+
+        <div class="field col-12 md:col-4">
+          <label for="filterCity">City</label>
+          <p-dropdown
+            id="filterCity"
+            [options]="getFilterCityOptions()"
+            [(ngModel)]="filterModel.city"
+            (onChange)="applyLocalFilters()"
+            [showClear]="true"
+            placeholder="All Cities"
+          ></p-dropdown>
+        </div>
+
+        <div class="field col-12 md:col-4">
+          <label for="filterGender">Gender</label>
+          <p-dropdown
+            id="filterGender"
+            [options]="genderFilterOptions"
+            [(ngModel)]="filterModel.gender"
+            (onChange)="applyLocalFilters()"
+            [showClear]="true"
+            placeholder="All Genders"
+          ></p-dropdown>
+        </div>
+
+        <div class="field col-12 md:col-8">
+          <label for="filterTech">Tech Interests</label>
+          <p-multiSelect
+            id="filterTech"
+            [options]="techOptions"
+            [(ngModel)]="filterModel.techInterests"
+            (onChange)="applyLocalFilters()"
+            display="chip"
+            defaultLabel="All Technologies"
+          ></p-multiSelect>
+        </div>
+      </div>
     </div>
 
     <p-table
       #dt
-      [value]="users"
+      [value]="filteredUsers"
       [loading]="loading"
       [paginator]="true"
       [rows]="10"

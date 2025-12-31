@@ -20,6 +20,24 @@ export class HomeComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
   
   users: User[] = [];
+  filteredUsers: User[] = [];
+  showFilters = false;
+  stateFilterOptions: { label: string; value: string | null }[] = [{ label: 'All States', value: null }];
+  genderFilterOptions: { label: string; value: string | null }[] = [{ label: 'All Genders', value: null }];
+
+  filterModel: {
+    name: string;
+    state: string | null;
+    city: string | null;
+    gender: string | null;
+    techInterests: string[];
+  } = {
+    name: '',
+    state: null,
+    city: null,
+    gender: null,
+    techInterests: []
+  };
   /**
    * Snapshot of the last loaded server state (keyed by userId).
    * Used as the baseline to determine what changed, regardless of how the UI mutates `users` while editing.
@@ -72,6 +90,7 @@ export class HomeComponent implements OnInit {
     private messageService: MessageService
   ) {
     this.genderOptions = this.genders.map(g => ({ label: g, value: g }));
+    this.genderFilterOptions = [{ label: 'All Genders', value: null }, ...this.genderOptions];
   }
 
   ngOnInit(): void {
@@ -89,10 +108,12 @@ export class HomeComponent implements OnInit {
         data.forEach((u) => {
           if (u.id) this.baselineUsers[u.id] = this.cloneUser(u);
         });
+        this.applyLocalFilters();
         this.loading = false;
       },
       error: (err: any) => {
         console.error('Failed to load users', err);
+        this.filteredUsers = [];
         this.loading = false;
       }
     });
@@ -211,6 +232,9 @@ export class HomeComponent implements OnInit {
       delete this.editedRows[user.id];
       delete this.fieldErrors[user.id];
     }
+
+    // Recompute filtered view (keeps list consistent if user edited a filterable field like name/state/city/gender/techInterests).
+    this.applyLocalFilters();
   }
 
   savechanges(): void {
@@ -298,6 +322,9 @@ export class HomeComponent implements OnInit {
           summary: 'Partial save',
           detail: `Saved ${successIds.length} member(s). Failed ${failed.length}. Please retry.`
         });
+
+        // Keep filtered view consistent after reverting failed rows.
+        this.applyLocalFilters();
       },
       error: () => {
         this.savingChanges = false;
@@ -308,6 +335,71 @@ export class HomeComponent implements OnInit {
           detail: 'Could not save changes. Please try again.'
         });
       }
+    });
+  }
+
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  clearFilters(): void {
+    this.filterModel = {
+      name: '',
+      state: null,
+      city: null,
+      gender: null,
+      techInterests: []
+    };
+    this.applyLocalFilters();
+  }
+
+  getFilterCityOptions(): { label: string; value: string | null }[] {
+    const selectedState = this.filterModel.state;
+
+    const cities =
+      selectedState && this.citiesByState[selectedState]
+        ? this.citiesByState[selectedState]
+        : Object.values(this.citiesByState).flat();
+
+    const unique = Array.from(new Set((cities || []).filter(Boolean))).sort();
+
+    return [{ label: 'All Cities', value: null }, ...unique.map((c) => ({ label: c, value: c }))];
+  }
+
+  applyLocalFilters(): void {
+    const nameQ = (this.filterModel.name || '').trim().toLowerCase();
+    const stateQ = this.filterModel.state;
+    const cityQ = this.filterModel.city;
+    const genderQ = this.filterModel.gender;
+    const techQ = (this.filterModel.techInterests || []).map((t) => String(t).trim()).filter(Boolean);
+
+    // If state changed and city no longer belongs to it, clear city filter.
+    if (stateQ && cityQ) {
+      const allowed = this.citiesByState[stateQ] || [];
+      if (!allowed.includes(cityQ)) {
+        this.filterModel.city = null;
+      }
+    }
+
+    this.filteredUsers = (this.users || []).filter((u) => {
+      const nameVal = String((u as any).name || '').trim().toLowerCase();
+      const stateVal = String((u as any).state || '').trim();
+      const cityVal = String((u as any).city || '').trim();
+      const genderVal = String((u as any).gender || '').trim();
+      const techVal: string[] = Array.isArray((u as any).techInterests) ? (u as any).techInterests : [];
+
+      if (nameQ && !nameVal.includes(nameQ)) return false;
+      if (stateQ && stateVal !== stateQ) return false;
+      if (cityQ && cityVal !== cityQ) return false;
+      if (genderQ && genderVal !== genderQ) return false;
+
+      if (techQ.length > 0) {
+        // Match if user has at least one of the selected tech interests.
+        const hasAny = techQ.some((t) => techVal.includes(t));
+        if (!hasAny) return false;
+      }
+
+      return true;
     });
   }
 
@@ -335,6 +427,16 @@ export class HomeComponent implements OnInit {
           { label: 'Select State', value: null },
           ...(data.states ?? []).map((s: string) => ({ label: s, value: s }))
         ];
+
+        // Build a filter-friendly options list (no template spread `...` which Angular does not support).
+        this.stateFilterOptions = [
+          { label: 'All States', value: null },
+          ...(this.states
+            .filter((s) => s.value !== null)
+            .map((s) => ({ label: s.label, value: s.value as string })))
+        ];
+
+        this.applyLocalFilters();
       },
       error: (err: any) => console.error('Failed to load locations.json', err)
     });
