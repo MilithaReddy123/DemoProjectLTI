@@ -8,7 +8,7 @@
       </div>
     </ng-template>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" autocomplete="off">
       <div class="p-fluid">
         <!-- Name -->
         <div class="p-field" style="margin-bottom: 1.5rem;">
@@ -23,6 +23,7 @@
             placeholder="Full name"
             class="p-inputtext-lg"
             style="width: 100%;"
+            autocomplete="off"
           />
           <small
             class="p-error"
@@ -50,6 +51,7 @@
               placeholder="Choose a username"
               class="p-inputtext-lg"
               style="width: 100%;"
+              autocomplete="off"
             />
           </span>
           <small
@@ -77,6 +79,7 @@
             placeholder="email@example.com"
             class="p-inputtext-lg"
             style="width: 100%;"
+            autocomplete="off"
           />
           <small
             class="p-error"
@@ -102,6 +105,7 @@
             styleClass="w-full"
             [inputStyle]="{ width: '100%' }"
             inputStyleClass="p-inputtext-lg"
+            autocomplete="new-password"
           ></p-password>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.password.touched && f.password.errors">
             <span *ngIf="f.password.errors['required']">Password is required</span>
@@ -123,6 +127,7 @@
             styleClass="w-full"
             [inputStyle]="{ width: '100%' }"
             inputStyleClass="p-inputtext-lg"
+            autocomplete="new-password"
           ></p-password>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="(f.confirmPassword.touched && f.confirmPassword.errors) || (registerForm.errors?.['mismatch'] && (f.confirmPassword.touched || f.password.touched))">
             <span *ngIf="f.confirmPassword.errors?.['required']">Confirm password is required</span>

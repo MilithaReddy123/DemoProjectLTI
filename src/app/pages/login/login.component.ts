@@ -1,21 +1,22 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   loading = false;
   errorMessage = '';
+  returnUrl = '/home';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private userService: UserService
+    private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
       username: [
@@ -35,6 +36,10 @@ export class LoginComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.returnUrl = '/home';
+  }
+
   get f(): any {
     return this.loginForm.controls;
   }
@@ -48,9 +53,10 @@ export class LoginComponent {
     this.loading = true;
     this.errorMessage = '';
 
-    this.userService.login(this.loginForm.value).subscribe({
+    const { username, password } = this.loginForm.value;
+    this.authService.login(username, password).subscribe({
       next: () => {
-        this.router.navigate(['/home']);
+        this.router.navigate([this.returnUrl]);
         this.loading = false;
       },
       error: (err: any) => {

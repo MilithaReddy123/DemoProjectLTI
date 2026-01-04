@@ -1,13 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -16,7 +16,7 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private userService: UserService
+    private authService: AuthService
   ) {
     this.registerForm = this.fb.group(
       {
@@ -84,6 +84,10 @@ export class RegisterComponent {
     return password === confirmPassword ? null : { mismatch: true };
   }
 
+  ngOnInit(): void {
+    // Component initialization
+  }
+
   get f(): any {
     return this.registerForm.controls;
   }
@@ -100,14 +104,14 @@ export class RegisterComponent {
 
     const { name, username, email, password } = this.registerForm.value;
     
-    this.userService.register({ name, username, email, password }).subscribe({
+    this.authService.register({ name, username, email, password }).subscribe({
       next: () => {
-        this.successMessage = 'Registration successful! Redirecting to login...';
+        this.successMessage = 'Registration successful! Redirecting to home...';
         this.loading = false;
         
         setTimeout(() => {
-          this.router.navigate(['/login']);
-        }, 2000);
+          this.router.navigate(['/home']);
+        }, 1500);
       },
       error: (err: any) => {
         this.errorMessage =

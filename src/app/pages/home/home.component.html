@@ -7,14 +7,24 @@
       </h1>
       <p class="p-text-secondary p-mt-1 p-mb-0">Manage member registrations</p>
     </div>
-    <button
-      pButton
-      type="button"
-      label="Add Member"
-      icon="pi pi-plus"
-      (click)="openAddUser()"
-      class="p-button-success"
-    ></button>
+    <div style="display: flex; gap: 0.5rem;">
+      <button
+        pButton
+        type="button"
+        label="Add Member"
+        icon="pi pi-plus"
+        (click)="openAddUser()"
+        class="p-button-success"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Logout"
+        icon="pi pi-sign-out"
+        (click)="logout()"
+        class="p-button-text"
+      ></button>
+    </div>
   </div>
 
   <p-toast></p-toast>
@@ -22,7 +32,7 @@
   <!-- Table Card -->
   <p-card>
     <!-- Table Actions (top-right) -->
-    <div class="p-d-flex p-jc-between p-ai-center p-mb-2" style="gap: 0.5rem;">
+    <div class="p-d-flex p-jc-end p-ai-center p-mb-2" style="gap: 0.5rem;">
       <button
         pButton
         type="button"
@@ -31,34 +41,31 @@
         class="p-button-text"
         (click)="toggleFilters()"
       ></button>
-
-      <div class="p-d-flex p-ai-center" style="gap: 0.5rem;">
-        <button
-          pButton
-          type="button"
-          label="Clear"
-          icon="pi pi-times"
-          class="p-button-text"
-          (click)="clearFilters()"
-          [disabled]="loading || savingChanges"
-        ></button>
-        <button
-          pButton
-          type="button"
-          label="Save Changes"
-          icon="pi pi-save"
-          (click)="savechanges()"
-          [disabled]="loading || savingChanges"
-          [loading]="savingChanges"
-          class="p-button-primary"
-        ></button>
-      </div>
+      <button
+        pButton
+        type="button"
+        label="Clear"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="clearFilters()"
+        [disabled]="loading || savingChanges"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Save Changes"
+        icon="pi pi-save"
+        (click)="savechanges()"
+        [disabled]="loading || savingChanges"
+        [loading]="savingChanges"
+        class="p-button-primary"
+      ></button>
     </div>
 
     <!-- Filter Bar -->
     <div *ngIf="showFilters" class="p-fluid p-mb-3">
       <div class="formgrid grid">
-        <div class="field col-12 md:col-4">
+        <div class="field col-12 md:col-3">
           <label for="filterName">Name</label>
           <input
             id="filterName"
@@ -67,10 +74,11 @@
             placeholder="Search by name"
             [(ngModel)]="filterModel.name"
             (ngModelChange)="applyLocalFilters()"
+            autocomplete="off"
           />
         </div>
 
-        <div class="field col-12 md:col-4">
+        <div class="field col-12 md:col-2">
           <label for="filterState">State</label>
           <p-dropdown
             id="filterState"
@@ -82,7 +90,7 @@
           ></p-dropdown>
         </div>
 
-        <div class="field col-12 md:col-4">
+        <div class="field col-12 md:col-2">
           <label for="filterCity">City</label>
           <p-dropdown
             id="filterCity"
@@ -94,7 +102,7 @@
           ></p-dropdown>
         </div>
 
-        <div class="field col-12 md:col-4">
+        <div class="field col-12 md:col-2">
           <label for="filterGender">Gender</label>
           <p-dropdown
             id="filterGender"
@@ -106,7 +114,7 @@
           ></p-dropdown>
         </div>
 
-        <div class="field col-12 md:col-8">
+        <div class="field col-12 md:col-3">
           <label for="filterTech">Tech Interests</label>
           <p-multiSelect
             id="filterTech"
@@ -147,6 +155,7 @@
               type="text" 
               (input)="dt.filterGlobal($any($event.target).value, 'contains')"
               placeholder="Search members..."
+              autocomplete="off"
             />
           </span>
         </div>
@@ -182,6 +191,7 @@
                     [class.ng-invalid]="hasFieldError(user.id, 'email')"
                     type="email"
                     placeholder="email@example.com"
+                    autocomplete="off"
                   />
                   <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'email')" style="font-size: 0.75rem; margin-top: 0.25rem;">
                     {{ getFieldError(user.id, 'email') }}
@@ -207,6 +217,7 @@
                     (blur)="celledited({ data: user, field: 'username' })"
                     [class.ng-invalid]="hasFieldError(user.id, 'username')"
                     placeholder="4-20 characters"
+                    autocomplete="off"
                   />
                   <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'username')" style="font-size: 0.75rem; margin-top: 0.25rem;">
                     {{ getFieldError(user.id, 'username') }}
@@ -230,6 +241,7 @@
                     [class.ng-invalid]="hasFieldError(user.id, 'mobile')"
                     placeholder="10-digit number"
                     maxlength="10"
+                    autocomplete="off"
                   />
                   <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'mobile')" style="font-size: 0.75rem; margin-top: 0.25rem;">
                     {{ getFieldError(user.id, 'mobile') }}
@@ -256,6 +268,7 @@
                     [class.ng-invalid]="hasFieldError(user.id, 'creditCard')"
                     placeholder="Last 4 digits or full 16-digit number"
                     maxlength="16"
+                    autocomplete="off"
                   />
                   <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'creditCard')" style="font-size: 0.75rem; margin-top: 0.25rem;">
                     {{ getFieldError(user.id, 'creditCard') }}
@@ -263,11 +276,10 @@
                 </div>
               </ng-template>
               <ng-template pTemplate="output">
-                <span *ngIf="hasValue(user.creditCard)" class="p-d-flex p-ai-center">
+                <span class="p-d-flex p-ai-center">
                   <i class="pi pi-credit-card p-mr-2" style="color: #6c757d;"></i>
-                  <span class="p-text-muted" style="font-family: monospace; font-size: 0.9rem; letter-spacing: 0.5px;">{{ user.creditCard }}</span>
+                  <span class="p-text-muted" style="font-family: monospace; font-size: 0.9rem; letter-spacing: 0.5px;">{{ formatCreditCard(user.creditCard) }}</span>
                 </span>
-                <span *ngIf="!hasValue(user.creditCard)" class="p-text-secondary">-</span>
               </ng-template>
             </p-cellEditor>
           </td>
@@ -393,7 +405,20 @@
           <td pEditableColumn field="address" (onEditComplete)="celledited($event)" style="word-wrap: break-word; word-break: break-word; white-space: normal; padding: 0.75rem; vertical-align: top;">
             <p-cellEditor>
               <ng-template pTemplate="input">
-                <textarea pInputTextarea rows="2" [(ngModel)]="user.address" (blur)="celledited({ data: user, field: 'address' })" placeholder="Address"></textarea>
+                <div>
+                  <textarea
+                    pInputTextarea
+                    rows="2"
+                    [(ngModel)]="user.address"
+                    (blur)="celledited({ data: user, field: 'address' })"
+                    [class.ng-invalid]="hasFieldError(user.id, 'address')"
+                    placeholder="Address"
+                    autocomplete="off"
+                  ></textarea>
+                  <small class="p-error p-d-block" *ngIf="hasFieldError(user.id, 'address')" style="font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ getFieldError(user.id, 'address') }}
+                  </small>
+                </div>
               </ng-template>
               <ng-template pTemplate="output">
                 <span *ngIf="hasValue(user.address)" class="p-d-flex p-ai-center" [pTooltip]="getTooltipText(user.address, 40)" tooltipPosition="top">
@@ -413,6 +438,7 @@
                     (onSelect)="celledited({ data: user, field: 'dob' })"
                     dateFormat="yy-mm-dd"
                     inputId="dob-{{ user.id || rowIndex }}"
+                    [maxDate]="todayDate"
                     [showIcon]="true"
                     appendTo="body"
                     [class.ng-invalid]="hasFieldError(user.id, 'dob')"

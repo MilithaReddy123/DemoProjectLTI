@@ -8,7 +8,7 @@
       </div>
     </ng-template>
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" autocomplete="off">
       <div class="p-fluid">
         <div class="p-field" style="margin-bottom: 1.5rem;">
           <label for="username" style="display: block; margin-bottom: 0.5rem;">Username</label>
@@ -22,6 +22,7 @@
               placeholder="Enter username"
               class="p-inputtext-lg"
               style="width: 100%;"
+              autocomplete="off"
             />
           </span>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.username.touched && f.username.errors">
@@ -40,6 +41,7 @@
             styleClass="w-full"
             [inputStyle]="{ width: '100%' }"
             inputStyleClass="p-inputtext-lg"
+            autocomplete="current-password"
           ></p-password>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.password.touched && f.password.errors">
             Password is required

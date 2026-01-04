@@ -1,10 +1,10 @@
-<form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()" autocomplete="off">
   <div class="p-fluid formgrid grid">
     
     <!-- Name -->
     <div class="field col-12 md:col-6">
       <label for="name">Name <span class="p-error">*</span></label>
-      <input id="name" type="text" pInputText formControlName="name" placeholder="Full name" />
+      <input id="name" type="text" pInputText formControlName="name" placeholder="Full name" autocomplete="off" />
       <small class="p-error" *ngIf="f.name.touched && f.name.errors">
         <span *ngIf="f.name.errors?.['required']">Name is required</span>
         <span *ngIf="f.name.errors?.['minlength']">Name must be at least 2 characters</span>
@@ -15,7 +15,7 @@
     <!-- Email -->
     <div class="field col-12 md:col-6">
       <label for="email">Email <span class="p-error">*</span></label>
-      <input id="email" type="email" pInputText formControlName="email" placeholder="email@example.com" />
+      <input id="email" type="email" pInputText formControlName="email" placeholder="email@example.com" autocomplete="off" />
       <small class="p-error" *ngIf="f.email.touched && f.email.errors">
         <span *ngIf="f.email.errors?.['required']">Email is required</span>
         <span *ngIf="f.email.errors?.['email'] && !f.email.errors?.['mustEndWithCom']">Please enter a valid email address</span>
@@ -26,7 +26,7 @@
     <!-- Mobile -->
     <div class="field col-12 md:col-6">
       <label for="mobile">Mobile <span class="p-error">*</span></label>
-      <input id="mobile" type="text" pInputText formControlName="mobile" placeholder="10-digit number" maxlength="10" />
+      <input id="mobile" type="text" pInputText formControlName="mobile" placeholder="10-digit number" maxlength="10" autocomplete="off" />
       <small class="p-error" *ngIf="f.mobile.touched && f.mobile.errors">
         <span *ngIf="f.mobile.errors?.['required']">Mobile number is required</span>
         <span *ngIf="f.mobile.errors?.['pattern']">Mobile must be exactly 10 digits</span>
@@ -36,7 +36,7 @@
     <!-- Credit Card -->
     <div class="field col-12 md:col-6">
       <label for="creditCard">Credit Card <span class="p-error">*</span></label>
-      <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16-digit number" maxlength="16" />
+      <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16-digit number" maxlength="16" autocomplete="off" />
       <small class="p-error" *ngIf="f.creditCard.touched && f.creditCard.errors">
         <span *ngIf="f.creditCard.errors?.['required']">Credit card number is required</span>
         <span *ngIf="f.creditCard.errors?.['pattern']">Credit card must be exactly 16 digits</span>
@@ -62,7 +62,7 @@
     </div>
 
     <!-- Gender -->
-    <div class="field col-12">
+    <div class="field col-12 md:col-6">
       <label>Gender <span class="p-error">*</span></label>
       <div class="flex flex-wrap gap-3 mt-2">
         <div class="field-radiobutton" *ngFor="let g of ['Male','Female','Other']">
@@ -73,7 +73,7 @@
     </div>
 
     <!-- Hobbies -->
-    <div class="field col-12">
+    <div class="field col-12 md:col-6">
       <label>Hobbies <span class="p-error">*</span></label>
       <div class="flex flex-wrap gap-3 mt-2">
         <div class="field-checkbox" *ngFor="let h of hobbiesOptions">
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Tech Interests -->
-    <div class="field col-12">
+    <div class="field col-12 md:col-6">
       <label for="techInterests">Tech Interests <span class="p-error">*</span></label>
       <p-multiSelect id="techInterests" [options]="techOptions" formControlName="techInterests" placeholder="Select technologies" [showHeader]="false"></p-multiSelect>
       <small class="p-error" *ngIf="f.techInterests.touched && f.techInterests.errors">
@@ -96,15 +96,18 @@
     </div>
 
     <!-- Address -->
-    <div class="field col-12">
+    <div class="field col-12 md:col-6">
       <label for="address">Address</label>
-      <textarea id="address" pInputTextarea rows="3" formControlName="address" placeholder="Full address"></textarea>
+      <textarea id="address" pInputTextarea rows="3" formControlName="address" placeholder="Full address" autocomplete="off"></textarea>
+      <small class="p-error" *ngIf="f.address.touched && f.address.errors">
+        <span *ngIf="f.address.errors?.['pattern']">Address can contain letters, numbers, spaces and , . _ - only</span>
+      </small>
     </div>
 
     <!-- Username -->
     <div class="field col-12 md:col-6">
       <label for="username">Username <span class="p-error">*</span></label>
-      <input id="username" type="text" pInputText formControlName="username" placeholder="4-20 characters" [disabled]="isEditMode" />
+      <input id="username" type="text" pInputText formControlName="username" placeholder="4-20 characters" [disabled]="isEditMode" autocomplete="off" />
       <small class="p-error" *ngIf="f.username.touched && f.username.errors">
         <span *ngIf="f.username.errors?.['required']">Username is required</span>
         <span *ngIf="f.username.errors?.['pattern']">Username must be 4-20 characters (letters, numbers, _, @, -)</span>
@@ -114,7 +117,7 @@
     <!-- DOB -->
     <div class="field col-12 md:col-6">
       <label for="dob">Date of Birth <span class="p-error">*</span></label>
-      <input id="dob" type="date" pInputText formControlName="dob" />
+      <input id="dob" type="date" pInputText formControlName="dob" [attr.max]="todayDateStr" autocomplete="off" />
       <small class="p-error" *ngIf="f.dob.touched && f.dob.errors">
         <span *ngIf="f.dob.errors?.['required']">Date of birth is required</span>
       </small>

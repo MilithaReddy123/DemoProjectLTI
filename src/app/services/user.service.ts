@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 
@@ -9,37 +9,29 @@ export class UserService {
 
   constructor(private http: HttpClient) {}
 
-  login(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/login`, credentials);
-  }
-
-  register(credentials: {
-    name: string;
-    username: string;
-    email: string;
-    password: string;
-  }): Observable<any> {
-    return this.http.post(`${this.baseUrl}/register`, credentials);
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('jwt_token')
+    return new HttpHeaders({ Authorization: token ? `Bearer ${token}` : '' });
   }
 
   getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/users`);
+    return this.http.get<User[]>(`${this.baseUrl}/users`, { headers: this.getHeaders() });
   }
 
   getUserById(id: string): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/users/${id}`);
+    return this.http.get<User>(`${this.baseUrl}/users/${id}`, { headers: this.getHeaders() });
   }
 
   addUser(user: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/users`, user);
+    return this.http.post(`${this.baseUrl}/users`, user, { headers: this.getHeaders() });
   }
 
   updateUser(id: string, user: Partial<User>): Observable<any> {
-    return this.http.put(`${this.baseUrl}/users/${id}`, user);
+    return this.http.put(`${this.baseUrl}/users/${id}`, user, { headers: this.getHeaders() });
   }
 
   deleteUser(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/users/${id}`);
+    return this.http.delete(`${this.baseUrl}/users/${id}`, { headers: this.getHeaders() });
   }
 }
 
