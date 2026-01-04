@@ -6,16 +6,17 @@ const {
   updateUser,
   deleteUser
 } = require('../controllers/userController');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 module.exports = (pool) => {
-  // User routes delegating to controllers
-  router.get('/', getAllUsers(pool));
-  router.get('/:id', getUserById(pool));
-  router.post('/', createUser(pool));
-  router.put('/:id', updateUser(pool));
-  router.delete('/:id', deleteUser(pool));
+  // All user routes protected with JWT verification
+  router.get('/', verifyToken, getAllUsers(pool));
+  router.get('/:id', verifyToken, getUserById(pool));
+  router.post('/', verifyToken, createUser(pool));
+  router.put('/:id', verifyToken, updateUser(pool));
+  router.delete('/:id', verifyToken, deleteUser(pool));
 
   return router;
 };

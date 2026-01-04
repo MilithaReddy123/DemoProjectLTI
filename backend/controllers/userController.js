@@ -258,6 +258,7 @@ const updateUser = (pool) => async (req, res) => {
     const { id } = req.params;
     const {
       name,
+      username,
       email,
       mobile,
       creditCard,
@@ -272,10 +273,10 @@ const updateUser = (pool) => async (req, res) => {
 
     await connection.beginTransaction();
 
-    // Update users table
+    // Update users table (username is not editable)
     await connection.query(
-      'UPDATE users SET name = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [name, email, id]
+      'UPDATE users SET name = ?,username=?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [name,username, email, id]
     );
 
     // Check if user_interests row exists for this user
