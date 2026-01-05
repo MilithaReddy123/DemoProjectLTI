@@ -33,6 +33,12 @@
   <p-card>
     <!-- Table Actions (top-right) -->
     <div class="p-d-flex p-jc-end p-ai-center p-mb-2" style="gap: 0.5rem;">
+      <p-splitButton
+        label="Excel"
+        icon="pi pi-file-excel"
+        class="p-button-text"
+        [model]="excelMenuItems"
+      ></p-splitButton>
       <button
         pButton
         type="button"
@@ -61,6 +67,68 @@
         class="p-button-primary"
       ></button>
     </div>
+
+    <!-- Bulk Upload Dialog -->
+    <p-dialog
+      header="Excel Bulk Add/Edit"
+      [(visible)]="bulkDialogVisible"
+      [modal]="true"
+      [style]="{ width: '900px', 'max-width': '95vw' }"
+      (onHide)="onBulkDialogHide()"
+    >
+      <div class="p-fluid">
+        <div class="p-mb-3">
+          <b>Step {{ bulkStep }}</b>
+          <span class="p-ml-2 p-text-secondary">
+            1) Select Excel → 2) Validate → 3) Upload & results
+          </span>
+        </div>
+
+        <!-- Step 1: select -->
+        <div class="p-mb-3">
+          <label><b>Select Excel file</b></label>
+          <input type="file" accept=".xlsx,.xls" (change)="onBulkFileSelected($event)" />
+          <div class="p-mt-2 p-text-secondary" *ngIf="bulkFile">
+            Selected: {{ bulkFile.name }}
+          </div>
+        </div>
+
+        <div class="p-d-flex p-jc-end p-ai-center" style="gap: 0.5rem;">
+          <button pButton type="button" label="Validate" icon="pi pi-check" class="p-button-primary"
+            [disabled]="!bulkFile || bulkValidating || bulkUploading" [loading]="bulkValidating"
+            (click)="validateBulk()"></button>
+          <button pButton type="button" label="Upload" icon="pi pi-cloud-upload" class="p-button-success"
+            [disabled]="!bulkFile || bulkUploading || bulkValidating" [loading]="bulkUploading"
+            (click)="uploadBulk()"></button>
+          <button pButton type="button" label="Download Error Excel" icon="pi pi-file-excel" class="p-button-text"
+            [disabled]="!bulkResult?.errorFileBase64" (click)="downloadValidationErrors()"></button>
+        </div>
+
+        <!-- Step 2: errors -->
+        <div class="p-mt-4" *ngIf="bulkErrorRows?.length">
+          <p-message severity="error" [text]="'Found ' + bulkErrorRows.length + ' error rows. Fix and re-upload.'"></p-message>
+          <p-table [value]="bulkErrorRows" [paginator]="true" [rows]="5" responsiveLayout="scroll" styleClass="p-datatable-sm p-mt-2">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 120px;">Row</th>
+                <th>Error Reason</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-e>
+              <tr>
+                <td>{{ e.rowNumber }}</td>
+                <td>{{ e.reason }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- Step 3: results -->
+        <div class="p-mt-4" *ngIf="bulkResult && !bulkErrorRows?.length">
+          <p-message severity="success" [text]="'Validation passed. You can upload now.'"></p-message>
+        </div>
+      </div>
+    </p-dialog>
 
     <!-- Filter Bar -->
     <div *ngIf="showFilters" class="p-fluid p-mb-3">

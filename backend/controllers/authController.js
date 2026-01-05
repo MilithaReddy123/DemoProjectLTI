@@ -1,6 +1,5 @@
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
-const { generateToken } = require('../middleware/authMiddleware');
 
 // Controller: Register new auth user (name, username, email, password)
 const register = (pool) => async (req, res) => {
@@ -79,12 +78,8 @@ const register = (pool) => async (req, res) => {
 
     console.log('✓ New user registered:', username);
 
-    // Generate JWT token
-    const token = generateToken(userId, username);
-
     return res.status(201).json({
       message: 'Registration successful!',
-      token,
       user: { id: userId, username, email: email.trim().toLowerCase(), name: name.trim() }
     });
   } catch (err) {
@@ -131,12 +126,8 @@ const login = (pool) => async (req, res) => {
       [user.id]
     );
 
-    // Generate JWT token
-    const token = generateToken(user.id, user.username);
-
     return res.json({
       message: 'Login successful',
-      token,
       user: userDetails[0]
     });
   } catch (err) {

@@ -4,7 +4,8 @@ import { User } from '../../models/user.model';
 import { Table } from 'primeng/table';
 import { HttpClient } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
-import { AuthService } from '../../services/auth.service';
+import { MenuItem } from 'primeng/api';
+import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -41,13 +42,136 @@ export class HomeComponent implements OnInit {
   genders = ['Male', 'Female', 'Other'];
   genderOptions = this.genders.map(g => ({ label: g, value: g }));
 
-  constructor(private userService: UserService, private http: HttpClient, private messageService: MessageService, private authService: AuthService) {
+  // Bulk Excel UI state
+  bulkDialogVisible = false;
+  bulkStep: 1 | 2 | 3 = 1;
+  bulkFile: File | null = null;
+  bulkValidating = false;
+  bulkUploading = false;
+  bulkResult: any = null;
+  bulkErrorRows: { rowNumber: number; reason: string }[] = [];
+  downloadMode: 'blank' | 'data' = 'blank';
+  downloadModeOptions: Opt<'blank' | 'data'>[] = [
+    { label: 'Blank Template', value: 'blank' },
+    { label: 'Template with Data', value: 'data' }
+  ];
+  excelMenuItems: MenuItem[] = [];
+
+  constructor(private userService: UserService, private http: HttpClient, private messageService: MessageService, private router: Router) {
     this.genderFilterOptions = [{ label: 'All Genders', value: null }, ...this.genderOptions];
+
+    this.excelMenuItems = [
+      {
+        label: 'Download',
+        icon: 'pi pi-download',
+        items: [
+          { label: 'Blank Template', icon: 'pi pi-file', command: () => { this.downloadMode = 'blank'; this.downloadTemplate(); } },
+          { label: 'Template with Data', icon: 'pi pi-database', command: () => { this.downloadMode = 'data'; this.downloadTemplate(); } }
+        ]
+      },
+      { label: 'Upload', icon: 'pi pi-upload', command: () => this.openBulkDialog() }
+    ];
   }
 
-  logout(): void { this.authService.logout(); }
+  logout(): void { localStorage.removeItem('current_user'); this.router.navigate(['/login']); }
 
   ngOnInit(): void { this.loadUsers(); this.loadLocations(); }
+
+  // -------- Bulk Excel actions --------
+  openBulkDialog(): void {
+    this.bulkDialogVisible = true;
+    this.bulkStep = 1;
+    this.bulkFile = null;
+    this.bulkResult = null;
+    this.bulkErrorRows = [];
+  }
+
+  onBulkDialogHide(): void {
+    this.bulkDialogVisible = false;
+  }
+
+  onBulkFileSelected(e: any): void {
+    const f: File | undefined = e?.target?.files?.[0];
+    this.bulkFile = f || null;
+    this.bulkStep = 1;
+    this.bulkResult = null;
+    this.bulkErrorRows = [];
+  }
+
+  private getDownloadedBy(): string {
+    try {
+      const u = JSON.parse(localStorage.getItem('current_user') || 'null');
+      return u?.username || u?.email || u?.name || 'Unknown';
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  downloadTemplate(): void {
+    const downloadedBy = this.getDownloadedBy();
+    this.userService.downloadUsersTemplate(this.downloadMode, downloadedBy).subscribe({
+      next: (blob: Blob) => this.downloadBlob(blob, `Users_Template_${this.downloadMode}.xlsx`),
+      error: () => this.toast('error', 'Download failed', 'Unable to download template')
+    });
+  }
+
+  validateBulk(): void {
+    if (!this.bulkFile) { this.toast('warn', 'No file', 'Please select an Excel file'); return; }
+    this.bulkValidating = true;
+    this.userService.validateBulkExcel(this.bulkFile).subscribe({
+      next: (res: any) => {
+        this.bulkResult = res;
+        this.bulkErrorRows = res?.errorDetails || [];
+        this.bulkStep = this.bulkErrorRows.length ? 2 : 3;
+        this.bulkValidating = false;
+      },
+      error: (err: any) => {
+        this.toast('error', 'Validation failed', err?.error?.message || 'Unable to validate file');
+        this.bulkValidating = false;
+      }
+    });
+  }
+
+  uploadBulk(): void {
+    if (!this.bulkFile) { this.toast('warn', 'No file', 'Please select an Excel file'); return; }
+    this.bulkUploading = true;
+    this.userService.uploadBulkExcel(this.bulkFile).subscribe({
+      next: (res: any) => {
+        this.bulkResult = res;
+        this.bulkErrorRows = res?.errorDetails || [];
+        this.bulkStep = 3;
+        this.bulkUploading = false;
+        this.toast('success', 'Bulk upload complete', `Created: ${res?.createdCount || 0}, Updated: ${res?.updatedCount || 0}, Errors: ${res?.errorCount || 0}`);
+        if (res?.errorFileBase64) this.downloadBase64Excel(res.errorFileBase64, 'Users_Bulk_Errors.xlsx');
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        this.toast('error', 'Upload failed', err?.error?.message || 'Unable to upload file');
+        this.bulkUploading = false;
+      }
+    });
+  }
+
+  downloadValidationErrors(): void {
+    if (this.bulkResult?.errorFileBase64) this.downloadBase64Excel(this.bulkResult.errorFileBase64, 'Users_Bulk_Validation_Errors.xlsx');
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  private downloadBase64Excel(base64: string, filename: string): void {
+    const bin = atob(base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    this.downloadBlob(blob, filename);
+  }
 
   loadUsers(): void {
     this.loading = true;

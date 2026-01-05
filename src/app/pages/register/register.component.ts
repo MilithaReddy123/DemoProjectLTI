@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -12,11 +12,12 @@ export class RegisterComponent implements OnInit {
   loading = false;
   errorMessage = '';
   successMessage = '';
+  private apiUrl = 'http://localhost:3000/api';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private http: HttpClient
   ) {
     this.registerForm = this.fb.group(
       {
@@ -104,8 +105,10 @@ export class RegisterComponent implements OnInit {
 
     const { name, username, email, password } = this.registerForm.value;
     
-    this.authService.register({ name, username, email, password }).subscribe({
-      next: () => {
+    this.http.post(`${this.apiUrl}/register`, { name, username, email, password }).subscribe({
+      next: (res: any) => {
+        // store current user for downloads (cover sheet "Downloaded by")
+        if (res?.user) localStorage.setItem('current_user', JSON.stringify(res.user));
         this.successMessage = 'Registration successful! Redirecting to home...';
         this.loading = false;
         

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -12,11 +12,12 @@ export class LoginComponent implements OnInit {
   loading = false;
   errorMessage = '';
   returnUrl = '/home';
+  private apiUrl = 'http://localhost:3000/api';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private authService: AuthService
+    private http: HttpClient
   ) {
     this.loginForm = this.fb.group({
       username: [
@@ -54,8 +55,10 @@ export class LoginComponent implements OnInit {
     this.errorMessage = '';
 
     const { username, password } = this.loginForm.value;
-    this.authService.login(username, password).subscribe({
-      next: () => {
+    this.http.post(`${this.apiUrl}/login`, { username, password }).subscribe({
+      next: (res: any) => {
+        // store current user for downloads (cover sheet "Downloaded by")
+        if (res?.user) localStorage.setItem('current_user', JSON.stringify(res.user));
         this.router.navigate([this.returnUrl]);
         this.loading = false;
       },

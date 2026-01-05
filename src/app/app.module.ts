@@ -33,6 +33,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { CalendarModule } from 'primeng/calendar';
+import { SplitButtonModule } from 'primeng/splitbutton';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent],
@@ -61,7 +62,8 @@ import { CalendarModule } from 'primeng/calendar';
     TagModule,
     MessageModule,
     ToastModule,
-    CalendarModule
+    CalendarModule,
+    SplitButtonModule
   ],
   providers: [MessageService],
   bootstrap: [AppComponent]
