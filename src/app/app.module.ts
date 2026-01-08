@@ -34,6 +34,7 @@ import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { CalendarModule } from 'primeng/calendar';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { StepsModule } from 'primeng/steps';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent],
@@ -63,7 +64,8 @@ import { SplitButtonModule } from 'primeng/splitbutton';
     MessageModule,
     ToastModule,
     CalendarModule,
-    SplitButtonModule
+    SplitButtonModule,
+    StepsModule
   ],
   providers: [MessageService],
   bootstrap: [AppComponent]

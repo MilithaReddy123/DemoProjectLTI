@@ -16,7 +16,8 @@ type Opt<T = string> = { label: string; value: T | null };
 
 @Component({
   selector: 'app-home',
-  templateUrl: './home.component.html'
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
@@ -46,6 +47,7 @@ export class HomeComponent implements OnInit {
   bulkDialogVisible = false;
   bulkStep: 1 | 2 | 3 = 1;
   bulkFile: File | null = null;
+  bulkFileError = '';
   bulkValidating = false;
   bulkUploading = false;
   bulkResult: any = null;
@@ -56,6 +58,11 @@ export class HomeComponent implements OnInit {
     { label: 'Template with Data', value: 'data' }
   ];
   excelMenuItems: MenuItem[] = [];
+  bulkSteps: MenuItem[] = [
+    { label: 'Select' },
+    { label: 'Validate' },
+    { label: 'Upload' }
+  ];
 
   constructor(private userService: UserService, private http: HttpClient, private messageService: MessageService, private router: Router) {
     this.genderFilterOptions = [{ label: 'All Genders', value: null }, ...this.genderOptions];
@@ -82,6 +89,7 @@ export class HomeComponent implements OnInit {
     this.bulkDialogVisible = true;
     this.bulkStep = 1;
     this.bulkFile = null;
+    this.bulkFileError = '';
     this.bulkResult = null;
     this.bulkErrorRows = [];
   }
@@ -93,6 +101,12 @@ export class HomeComponent implements OnInit {
   onBulkFileSelected(e: any): void {
     const f: File | undefined = e?.target?.files?.[0];
     this.bulkFile = f || null;
+    this.bulkFileError = '';
+    if (this.bulkFile && !this.isValidTemplateFileName(this.bulkFile.name)) {
+      this.bulkFileError =
+        'Invalid file name. Please upload only the Excel template downloaded from this application. Note: browser downloads may add suffix like "(2)" and that is allowed.';
+      this.bulkFile = null;
+    }
     this.bulkStep = 1;
     this.bulkResult = null;
     this.bulkErrorRows = [];
@@ -116,7 +130,7 @@ export class HomeComponent implements OnInit {
   }
 
   validateBulk(): void {
-    if (!this.bulkFile) { this.toast('warn', 'No file', 'Please select an Excel file'); return; }
+    if (!this.bulkFile) { this.toast('warn', 'No file', this.bulkFileError || 'Please select an Excel file'); return; }
     this.bulkValidating = true;
     this.userService.validateBulkExcel(this.bulkFile).subscribe({
       next: (res: any) => {
@@ -133,7 +147,7 @@ export class HomeComponent implements OnInit {
   }
 
   uploadBulk(): void {
-    if (!this.bulkFile) { this.toast('warn', 'No file', 'Please select an Excel file'); return; }
+    if (!this.bulkFile) { this.toast('warn', 'No file', this.bulkFileError || 'Please select an Excel file'); return; }
     this.bulkUploading = true;
     this.userService.uploadBulkExcel(this.bulkFile).subscribe({
       next: (res: any) => {
@@ -154,6 +168,23 @@ export class HomeComponent implements OnInit {
 
   downloadValidationErrors(): void {
     if (this.bulkResult?.errorFileBase64) this.downloadBase64Excel(this.bulkResult.errorFileBase64, 'Users_Bulk_Validation_Errors.xlsx');
+  }
+
+  private isValidTemplateFileName(filename: string): boolean {
+    const name = String(filename || '').trim();
+    if (!name) return false;
+    if (!/\.xlsx$/i.test(name)) return false;
+
+    // Only allow templates downloaded from this application. Browsers may append " (2)".
+    // Frontend download: Users_Template_blank.xlsx | Users_Template_data.xlsx
+    // Backend-style: Users_Template_Blank_YYYY-MM-DD.xlsx | Users_Template_With_Data_YYYY-MM-DD.xlsx
+    const lower = name.toLowerCase();
+    if (!lower.startsWith('users_template_')) return false;
+
+    return (
+      /^users_template_(blank|data)(\s*\(\d+\))?\.xlsx$/i.test(name) ||
+      /^users_template_(blank|with_data)_\d{4}-\d{2}-\d{2}(\s*\(\d+\))?\.xlsx$/i.test(name)
+    );
   }
 
   private downloadBlob(blob: Blob, filename: string): void {
