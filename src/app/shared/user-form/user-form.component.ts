@@ -73,15 +73,8 @@ export class UserFormComponent implements OnInit, OnChanges {
 
   private patchForm(): void {
     if (this.user) {
-      let dob = '';
-      if (this.user.dob) {
-        try {
-          const dateObj = new Date(this.user.dob);
-          dob = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split('T')[0] : '';
-        } catch {
-          dob = '';
-        }
-      }
+      // DOB from backend is YYYY-MM-DD string - use directly for date input
+      const dob = (this.user.dob && typeof this.user.dob === 'string') ? this.user.dob.split('T')[0] : '';
       this.userForm.patchValue({ ...this.user, creditCard: this.user.creditCard || '', hobbies: this.user.hobbies || [], techInterests: this.user.techInterests || [], address: this.user.address || '', dob });
       if (this.user.state) this.onStateChange(this.user.state);
       ['password', 'confirmPassword'].forEach(f => { this.userForm.get(f)?.clearValidators(); this.userForm.get(f)?.updateValueAndValidity(); });

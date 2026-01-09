@@ -359,12 +359,10 @@ export class HomeComponent implements OnInit {
   formatDate(d: any): string { return this.fmtDate(d, { hour: '2-digit', minute: '2-digit' }); }
   formatDateOnly(d: any): string {
     if (!this.hasValue(d)) return '-';
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return '-';
-    const day = String(dt.getDate()).padStart(2, '0');
-    const month = String(dt.getMonth() + 1).padStart(2, '0');
-    const year = dt.getFullYear();
-    return `${day}-${month}-${year}`;
+    if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d)) {
+      return d.split('T')[0]; // show YYYY-MM-DD as-is
+    }
+    return '-';
   }
   private fmtDate(d: any, opt?: Intl.DateTimeFormatOptions): string {
     if (!this.hasValue(d)) return '-';
@@ -435,8 +433,18 @@ export class HomeComponent implements OnInit {
   }
 
   private prepareUpdate(u: User): any {
-    const dob = u.dob ? new Date(u.dob) : null;
-    const fmtDob = dob && !isNaN(dob.getTime()) ? `${dob.getFullYear()}-${String(dob.getMonth() + 1).padStart(2, '0')}-${String(dob.getDate()).padStart(2, '0')}` : null;
+    // DOB is either Date object or YYYY-MM-DD string - ensure YYYY-MM-DD for backend
+    let fmtDob = null;
+    if (u.dob) {
+      if (typeof u.dob === 'string' && /^\d{4}-\d{2}-\d{2}/.test(u.dob)) {
+        fmtDob = u.dob.split('T')[0];
+      } else {
+        const d = u.dob instanceof Date ? u.dob : new Date(u.dob);
+        if (!isNaN(d.getTime())) {
+          fmtDob = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+      }
+    }
     return { name: u.name, username: u.username, email: u.email, mobile: u.mobile, creditCard: u.creditCard, state: u.state, city: u.city, gender: u.gender, hobbies: u.hobbies || [], techInterests: u.techInterests || [], address: u.address || '', dob: fmtDob };
   }
 
