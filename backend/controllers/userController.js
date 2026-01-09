@@ -93,11 +93,15 @@ const normalizeListCell = (v) => {
 
 const normalizeDateCell = (v) => {
   if (!v) return '';
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  // Excel Date object (cellDates: true) - use local date parts
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return '';
+    const y = v.getFullYear(), m = String(v.getMonth() + 1).padStart(2, '0'), d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  // Only accept YYYY-MM-DD string format (keep it simple and consistent)
   const s = String(v).trim();
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
 };
 
 const validateRow = (row, lookups, mode) => {
@@ -147,7 +151,7 @@ const validateRow = (row, lookups, mode) => {
   if (tech.length && tech.some((t) => !lookups.techInterests.includes(t))) errors.push('Tech Interests contain invalid value(s)');
 
   const dob = normalizeDateCell(row.dob);
-  if ((isAdd || row.dob) && !dob) errors.push('DOB must be a valid date (YYYY-MM-DD)');
+  if ((isAdd || row.dob) && !dob) errors.push('DOB must be valid date (YYYY-MM-DD)');
 
   const pw = String(row.password ?? '').trim();
   if (isAdd) {
@@ -266,7 +270,7 @@ const downloadExcelTemplate = (pool) => async (req, res) => {
       else if (c.key === 'gender') rule = `Dropdown. Allowed: ${lookups.genders.join(', ')}`;
       else if (c.key === 'state') rule = 'Dropdown. Must be valid State.';
       else if (c.key === 'city') rule = 'Dropdown. Must be valid City (and match State).';
-      else if (c.key === 'dob') rule = 'Date in YYYY-MM-DD. Future dates not allowed.';
+      else if (c.key === 'dob') rule = 'Date in YYYY-MM-DD format. Future dates not allowed.';
       else if (c.key === 'creditCard') rule = '16 digits (or last 4 digits for edits). Stored as last 4 only.';
       else if (c.key === 'password') rule = 'Required for ADD. Ignored for EDIT.';
       else rule = c.requiredForAdd ? 'Required for ADD.' : 'Optional.';
@@ -318,22 +322,32 @@ const downloadExcelTemplate = (pool) => async (req, res) => {
         LEFT JOIN user_interests ui ON u.id = ui.user_id
         ORDER BY u.created_at DESC
       `);
-      dataRows = rows.map((r) => ({
-        id: r.id || '',
-        name: r.name || '',
-        email: r.email || '',
-        username: r.username || '',
-        mobile: sanitizeValue(r.mobile) || '',
-        creditCard: sanitizeValue(r.credit_card_last4) || '',
-        state: sanitizeValue(r.state) || '',
-        city: sanitizeValue(r.city) || '',
-        gender: r.gender || 'Male',
-        hobbies: (Array.isArray(parseJsonField(r.hobbies)) ? parseJsonField(r.hobbies) : []).join(', '),
-        techInterests: (Array.isArray(parseJsonField(r.tech_interests)) ? parseJsonField(r.tech_interests) : []).join(', '),
-        address: sanitizeValue(r.address) || '',
-        dob: sanitizeValue(r.dob) || '',
-        password: ''
-      }));
+      dataRows = rows.map((r) => {
+        // Format DOB as YYYY-MM-DD for Excel (string)
+        let dobFormatted = '';
+        if (r.dob) {
+          const d = r.dob instanceof Date ? r.dob : new Date(r.dob);
+          if (!isNaN(d.getTime())) {
+            dobFormatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          }
+        }
+        return {
+          id: r.id || '',
+          name: r.name || '',
+          email: r.email || '',
+          username: r.username || '',
+          mobile: sanitizeValue(r.mobile) || '',
+          creditCard: sanitizeValue(r.credit_card_last4) || '',
+          state: sanitizeValue(r.state) || '',
+          city: sanitizeValue(r.city) || '',
+          gender: r.gender || 'Male',
+          hobbies: (Array.isArray(parseJsonField(r.hobbies)) ? parseJsonField(r.hobbies) : []).join(', '),
+          techInterests: (Array.isArray(parseJsonField(r.tech_interests)) ? parseJsonField(r.tech_interests) : []).join(', '),
+          address: sanitizeValue(r.address) || '',
+          dob: dobFormatted,
+          password: ''
+        };
+      });
     }
 
     wsCover.cell(6, 2).number(mode === 'data' ? dataRows.length : 0);
@@ -663,6 +677,14 @@ const getAllUsers = (pool) => async (req, res) => {
 
     const users = rows.map((r) => {
       const creditCardLast4 = sanitizeValue(r.credit_card_last4);
+      // Format DOB as YYYY-MM-DD string (MySQL DATE type comes as Date object)
+      let dobFormatted = null;
+      if (r.dob) {
+        const d = r.dob instanceof Date ? r.dob : new Date(r.dob);
+        if (!isNaN(d.getTime())) {
+          dobFormatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+      }
       
       return {
         id: r.id,
@@ -679,7 +701,7 @@ const getAllUsers = (pool) => async (req, res) => {
         hobbies: Array.isArray(parseJsonField(r.hobbies)) ? parseJsonField(r.hobbies) : [],
         techInterests: Array.isArray(parseJsonField(r.tech_interests)) ? parseJsonField(r.tech_interests) : [],
         address: sanitizeValue(r.address),
-        dob: sanitizeValue(r.dob)
+        dob: dobFormatted
       };
     });
 
@@ -727,6 +749,15 @@ const getUserById = (pool) => async (req, res) => {
 
     const user = rows[0];
     const creditCardLast4 = sanitizeValue(user.credit_card_last4);
+    
+    // Format DOB as YYYY-MM-DD string
+    let dobFormatted = null;
+    if (user.dob) {
+      const d = user.dob instanceof Date ? user.dob : new Date(user.dob);
+      if (!isNaN(d.getTime())) {
+        dobFormatted = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+    }
 
     return res.json({
       id: user.id,
@@ -741,7 +772,7 @@ const getUserById = (pool) => async (req, res) => {
       hobbies: Array.isArray(parseJsonField(user.hobbies)) ? parseJsonField(user.hobbies) : [],
       techInterests: Array.isArray(parseJsonField(user.tech_interests)) ? parseJsonField(user.tech_interests) : [],
       address: sanitizeValue(user.address),
-      dob: sanitizeValue(user.dob)
+      dob: dobFormatted
     });
   } catch (err) {
     console.error('Error fetching user:', err.message);
