@@ -21,6 +21,7 @@ type Opt<T = string> = { label: string; value: T | null };
 })
 export class HomeComponent implements OnInit {
   @ViewChild('dt') dt!: Table;
+  @ViewChild('bulkFileInput', { static: false }) bulkFileInput!: any;
   users: User[] = [];
   filteredUsers: User[] = [];
   showFilters = false;
@@ -96,6 +97,15 @@ export class HomeComponent implements OnInit {
 
   onBulkDialogHide(): void {
     this.bulkDialogVisible = false;
+    this.bulkFile = null;
+    this.bulkFileError = '';
+    this.bulkResult = null;
+    this.bulkErrorRows = [];
+    this.bulkStep = 1;
+    // Clear file input element
+    if (this.bulkFileInput?.nativeElement) {
+      this.bulkFileInput.nativeElement.value = '';
+    }
   }
 
   onBulkFileSelected(e: any): void {
@@ -155,7 +165,7 @@ export class HomeComponent implements OnInit {
         this.bulkErrorRows = res?.errorDetails || [];
         this.bulkStep = 3;
         this.bulkUploading = false;
-        this.toast('success', 'Bulk upload complete', `Created: ${res?.createdCount || 0}, Updated: ${res?.updatedCount || 0}, Errors: ${res?.errorCount || 0}`);
+        this.toast('success', 'Uploaded successfully', 'Excel file has been processed successfully.');
         if (res?.errorFileBase64) this.downloadBase64Excel(res.errorFileBase64, 'Users_Bulk_Errors.xlsx');
         this.loadUsers();
       },
@@ -347,7 +357,15 @@ export class HomeComponent implements OnInit {
 
   hasValue(v: any): boolean { return v != null && v !== '' && (typeof v !== 'string' || v.trim() !== ''); }
   formatDate(d: any): string { return this.fmtDate(d, { hour: '2-digit', minute: '2-digit' }); }
-  formatDateOnly(d: any): string { return this.fmtDate(d); }
+  formatDateOnly(d: any): string {
+    if (!this.hasValue(d)) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return '-';
+    const day = String(dt.getDate()).padStart(2, '0');
+    const month = String(dt.getMonth() + 1).padStart(2, '0');
+    const year = dt.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
   private fmtDate(d: any, opt?: Intl.DateTimeFormatOptions): string {
     if (!this.hasValue(d)) return '-';
     const dt = new Date(d);

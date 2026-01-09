@@ -32,7 +32,7 @@
   <!-- Table Card -->
   <p-card>
     <!-- Table Actions (top-right) -->
-    <div class="p-d-flex p-jc-end p-ai-center p-mb-2" style="gap: 0.5rem;">
+    <div class="p-d-flex p-jc-end p-ai-center p-mb-2 table-actions">
       <p-splitButton
         label="Excel"
         icon="pi pi-file-excel"
@@ -87,6 +87,7 @@
             <div class="field col-12">
               <label for="bulkExcelFile"><b>Select Excel file</b></label>
               <input
+                #bulkFileInput
                 id="bulkExcelFile"
                 type="file"
                 accept=".xlsx"
@@ -274,8 +275,8 @@
           <th style="width: 6%; padding: 0.75rem;">Gender</th>
           <th style="width: 8%; padding: 0.75rem;">Hobbies</th>
           <th style="width: 8%; padding: 0.75rem;">Tech Interests</th>
-          <th style="width: 10%; padding: 0.75rem;">Address</th>
-          <th pSortableColumn="dob" style="width: 7%; padding: 0.75rem;">DOB <p-sortIcon field="dob"></p-sortIcon></th>
+          <th style="width: 9%; padding: 0.75rem;">Address</th>
+          <th pSortableColumn="dob" style="width: 8%; padding: 0.75rem;">DOB <p-sortIcon field="dob"></p-sortIcon></th>
           <th style="width: 5%; padding: 0.75rem;">Actions</th>
         </tr>
       </ng-template>

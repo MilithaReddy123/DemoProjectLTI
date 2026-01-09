@@ -516,10 +516,10 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
       editList.length = 0; editList.push(...editOk);
     }
 
+    // IMPORTANT: If user downloads "template with data", all rows contain UserId.
+
     if (dryRun) {
       return res.json({
-        createdCount: 0,
-        updatedCount: 0,
         errorCount: errorDetails.length,
         errorDetails,
         errorFileBase64: failedRows.length ? await buildErrorWorkbookBase64(failedRows) : null
@@ -531,7 +531,6 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
       await connection.beginTransaction();
 
       // Bulk INSERT for ADD (2 queries: users + interests)
-      let createdCount = 0;
       if (addList.length) {
         const userRows = [];
         const interestRows = [];
@@ -558,11 +557,9 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
           'INSERT INTO user_interests (user_id, mobile, credit_card_last4, state, city, gender, hobbies, tech_interests, address, dob) VALUES ?',
           [interestRows]
         );
-        createdCount = userRows.length;
       }
 
       // Bulk UPDATE for EDIT (2 queries total: users UPDATE + interests UPSERT)
-      let updatedCount = 0;
       if (editList.length) {
         const ids = editList.map((r) => r.id);
 
@@ -618,14 +615,10 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
              dob = VALUES(dob)`,
           [interestValues]
         );
-
-        updatedCount = editList.length;
       }
 
       await connection.commit();
       return res.json({
-        createdCount,
-        updatedCount,
         errorCount: errorDetails.length,
         errorDetails,
         errorFileBase64: failedRows.length ? await buildErrorWorkbookBase64(failedRows) : null

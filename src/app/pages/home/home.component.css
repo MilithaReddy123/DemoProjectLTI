@@ -55,6 +55,20 @@
   margin-bottom: 0.5rem;
 }
 
+/* Top-right action buttons: Excel, Filters, Clear, Save Changes */
+.table-actions {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+  margin-bottom: 0.75rem;
+}
+
+.table-actions > * {
+  flex-shrink: 0;
+}
+
 /* File Selection Section */
 .bulk-file-section {
   margin-bottom: 1rem;

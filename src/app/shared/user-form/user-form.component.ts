@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { User } from '../../models/user.model';
 import { HttpClient } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
 
 interface City { cityName: string; cityCode: string; }
 interface StateData { stateName: string; stateCode: string; cities: City[]; }
@@ -28,7 +29,7 @@ export class UserFormComponent implements OnInit, OnChanges {
   hobbiesOptions = ['Reading', 'Music', 'Sports'].map(h => ({ label: h, value: h }));
   techOptions = ['Angular', 'React', 'Node.js', 'Java'].map(t => ({ label: t, value: t }));
 
-  constructor(private fb: FormBuilder, private userService: UserService, private http: HttpClient) {}
+  constructor(private fb: FormBuilder, private userService: UserService, private http: HttpClient, private messageService: MessageService) {}
 
   ngOnInit(): void { this.buildForm(); this.loadLocations(); }
 
@@ -72,7 +73,15 @@ export class UserFormComponent implements OnInit, OnChanges {
 
   private patchForm(): void {
     if (this.user) {
-      const dob = this.user.dob ? new Date(this.user.dob).toISOString().split('T')[0] : '';
+      let dob = '';
+      if (this.user.dob) {
+        try {
+          const dateObj = new Date(this.user.dob);
+          dob = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split('T')[0] : '';
+        } catch {
+          dob = '';
+        }
+      }
       this.userForm.patchValue({ ...this.user, creditCard: this.user.creditCard || '', hobbies: this.user.hobbies || [], techInterests: this.user.techInterests || [], address: this.user.address || '', dob });
       if (this.user.state) this.onStateChange(this.user.state);
       ['password', 'confirmPassword'].forEach(f => { this.userForm.get(f)?.clearValidators(); this.userForm.get(f)?.updateValueAndValidity(); });
@@ -99,6 +108,20 @@ export class UserFormComponent implements OnInit, OnChanges {
     const v = this.userForm.value;
     const data = this.user?.id ? { name: v.name, email: v.email, mobile: v.mobile, creditCard: v.creditCard, state: v.state, city: v.city, gender: v.gender, hobbies: v.hobbies, techInterests: v.techInterests, address: v.address, dob: v.dob } : v;
     const req = this.user?.id ? this.userService.updateUser(this.user.id, data) : this.userService.addUser(data);
-    req.subscribe({ next: () => { this.saved.emit(); this.submitting = false; }, error: (e) => { alert(e?.error?.message || 'Save failed.'); this.submitting = false; } });
+    req.subscribe({ 
+      next: () => { 
+        this.saved.emit(); 
+        this.submitting = false; 
+      }, 
+      error: (e) => { 
+        this.messageService.add({ 
+          severity: 'error', 
+          summary: 'Save Failed', 
+          detail: e?.error?.message || 'Unable to save user. Please try again.', 
+          life: 5000 
+        }); 
+        this.submitting = false; 
+      } 
+    });
   }
 }
