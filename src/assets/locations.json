@@ -19,6 +19,61 @@
         { "cityName": "Guntur", "cityCode": "GNT" },
         { "cityName": "Tirupati", "cityCode": "TPT" }
       ]
+    },
+    {
+      "stateName": "Maharashtra",
+      "stateCode": "MH",
+      "cities": [
+        { "cityName": "Mumbai", "cityCode": "BOM" },
+        { "cityName": "Pune", "cityCode": "PNQ" },
+        { "cityName": "Nagpur", "cityCode": "NAG" },
+        { "cityName": "Nashik", "cityCode": "ISK" },
+        { "cityName": "Aurangabad", "cityCode": "IXU" }
+      ]
+    },
+    {
+      "stateName": "Karnataka",
+      "stateCode": "KA",
+      "cities": [
+        { "cityName": "Bangalore", "cityCode": "BLR" },
+        { "cityName": "Mysore", "cityCode": "MYQ" },
+        { "cityName": "Hubli", "cityCode": "HBX" },
+        { "cityName": "Mangalore", "cityCode": "IXE" },
+        { "cityName": "Belgaum", "cityCode": "IXG" }
+      ]
+    },
+    {
+      "stateName": "Tamil Nadu",
+      "stateCode": "TN",
+      "cities": [
+        { "cityName": "Chennai", "cityCode": "MAA" },
+        { "cityName": "Coimbatore", "cityCode": "CJB" },
+        { "cityName": "Madurai", "cityCode": "IXM" },
+        { "cityName": "Tiruchirappalli", "cityCode": "TRZ" },
+        { "cityName": "Salem", "cityCode": "SXV" }
+      ]
+    },
+    {
+      "stateName": "Gujarat",
+      "stateCode": "GJ",
+      "cities": [
+        { "cityName": "Ahmedabad", "cityCode": "AMD" },
+        { "cityName": "Surat", "cityCode": "STV" },
+        { "cityName": "Vadodara", "cityCode": "BDQ" },
+        { "cityName": "Rajkot", "cityCode": "RAJ" },
+        { "cityName": "Gandhinagar", "cityCode": "ISK" }
+      ]
+    },
+    {
+      "stateName": "Rajasthan",
+      "stateCode": "RJ",
+      "cities": [
+        { "cityName": "Jaipur", "cityCode": "JAI" },
+        { "cityName": "Jodhpur", "cityCode": "JDH" },
+        { "cityName": "Udaipur", "cityCode": "UDR" },
+        { "cityName": "Kota", "cityCode": "KTU" },
+        { "cityName": "Ajmer", "cityCode": "AJM" }
+      ]
     }
   ]
 }

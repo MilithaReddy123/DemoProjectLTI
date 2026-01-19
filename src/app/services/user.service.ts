@@ -3,14 +3,17 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 
+export type UsersPage = { items: User[]; total: number; limit: number; offset: number };
+
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private baseUrl = 'http://localhost:3000/api';
 
   constructor(private http: HttpClient) {}
 
-  getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.baseUrl}/users`);
+  getUsers(limit = 10, offset = 0): Observable<UsersPage> {
+    const params: any = { limit: String(limit), offset: String(offset) };
+    return this.http.get<UsersPage>(`${this.baseUrl}/users`, { params });
   }
 
   getUserById(id: string): Observable<User> {
@@ -44,6 +47,27 @@ export class UserService {
     const fd = new FormData();
     fd.append('file', file);
     return this.http.post(`${this.baseUrl}/users/bulk`, fd, { params: { dryRun: 'false' } });
+  }
+
+  // Chart data endpoints
+  getStateDistribution(): Observable<{ label: string; value: number }[]> {
+    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/state`);
+  }
+
+  getCityDistribution(): Observable<{ label: string; value: number }[]> {
+    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/city`);
+  }
+
+  getGenderDistribution(): Observable<{ label: string; value: number }[]> {
+    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/gender`);
+  }
+
+  getHobbiesDistribution(): Observable<{ label: string; value: number }[]> {
+    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/hobbies`);
+  }
+
+  getTechInterestsDistribution(): Observable<{ label: string; value: number }[]> {
+    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/tech-interests`);
   }
 }
 

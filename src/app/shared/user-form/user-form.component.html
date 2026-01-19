@@ -18,8 +18,7 @@
       <input id="email" type="email" pInputText formControlName="email" placeholder="email@example.com" autocomplete="off" />
       <small class="p-error" *ngIf="f.email.touched && f.email.errors">
         <span *ngIf="f.email.errors?.['required']">Email is required</span>
-        <span *ngIf="f.email.errors?.['email'] && !f.email.errors?.['mustEndWithCom']">Please enter a valid email address</span>
-        <span *ngIf="f.email.errors?.['mustEndWithCom']">Email must end with .com</span>
+        <span *ngIf="f.email.errors?.['email'] || f.email.errors?.['invalidEmail']">Please enter a valid email address with a valid domain extension (e.g., .com, .org, .net)</span>
       </small>
     </div>
 
@@ -36,10 +35,10 @@
     <!-- Credit Card -->
     <div class="field col-12 md:col-6">
       <label for="creditCard">Credit Card <span class="p-error">*</span></label>
-      <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16-digit number" maxlength="16" autocomplete="off" />
+      <input id="creditCard" type="text" pInputText formControlName="creditCard" placeholder="16 digits or last 4 digits" maxlength="16" autocomplete="off" />
       <small class="p-error" *ngIf="f.creditCard.touched && f.creditCard.errors">
         <span *ngIf="f.creditCard.errors?.['required']">Credit card number is required</span>
-        <span *ngIf="f.creditCard.errors?.['pattern']">Credit card must be exactly 16 digits</span>
+        <span *ngIf="f.creditCard.errors?.['pattern']">Credit card must be 16 digits or last 4 digits</span>
       </small>
     </div>
 
@@ -110,7 +109,7 @@
       <input id="username" type="text" pInputText formControlName="username" placeholder="4-20 characters" [disabled]="isEditMode" autocomplete="off" />
       <small class="p-error" *ngIf="f.username.touched && f.username.errors">
         <span *ngIf="f.username.errors?.['required']">Username is required</span>
-        <span *ngIf="f.username.errors?.['pattern']">Username must be 4-20 characters (letters, numbers, _, @, -)</span>
+        <span *ngIf="f.username.errors?.['pattern']">Username must be 4-20 characters (letters, numbers, _, -, . only)</span>
       </small>
     </div>
 

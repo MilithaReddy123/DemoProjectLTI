@@ -55,7 +55,7 @@ const register = (pool) => async (req, res) => {
 
     // Check if username or email already exists
     const [existing] = await pool.query(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
+      'SELECT id FROM users WHERE username = ? UNION SELECT id FROM users WHERE email = ?',
       [username, email]
     );
 
@@ -101,9 +101,16 @@ const login = (pool) => async (req, res) => {
       });
     }
 
-    // Allow login by username OR email
+    // Allow login by username OR email - optimized: fetch all needed fields in single query using UNION
     const [rows] = await pool.query(
-      'SELECT id, username, password_hash FROM users WHERE username = ? OR email = ?',
+      `SELECT id, username, email, name, password_hash 
+       FROM users 
+       WHERE username = ? 
+       UNION 
+       SELECT id, username, email, name, password_hash 
+       FROM users 
+       WHERE email = ? 
+       LIMIT 1`,
       [username, username]
     );
 
@@ -120,15 +127,15 @@ const login = (pool) => async (req, res) => {
 
     console.log('✓ User logged in:', username);
 
-    // Fetch user details for response
-    const [userDetails] = await pool.query(
-      'SELECT id, username, email, name FROM users WHERE id = ?',
-      [user.id]
-    );
-
+    // Return user details directly from first query (no second query needed)
     return res.json({
       message: 'Login successful',
-      user: userDetails[0]
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name
+      }
     });
   } catch (err) {
     console.error('Error logging in:', err.message);

@@ -1,0 +1,153 @@
+.charts-container {
+  min-height: calc(100vh - 100px);
+  padding: 2rem;
+  background: #f8f9fa;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 1rem;
+}
+
+.back-button {
+  margin-top: 0.5rem;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.dashboard-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dashboard-title i {
+  color: #4F81BD;
+  font-size: 1.8rem;
+}
+
+.dashboard-subtitle {
+  margin: 0.5rem 0 0 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.charts-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.chart-item {
+  width: 100%;
+}
+
+.pie-chart-item {
+  grid-column: 1;
+}
+
+.bar-charts-container {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.pie-wrapper {
+  height: 400px;
+}
+
+.chart-card {
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card ::ng-deep .p-card-body {
+  padding: 1.5rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card ::ng-deep .p-card-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+  border-bottom: 1px solid #e9ecef;
+  background: #fff;
+}
+
+.chart-card ::ng-deep .p-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.chart-wrapper {
+  height: 400px;
+  position: relative;
+  flex: 1;
+  padding-top: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .charts-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .pie-chart-item {
+    grid-column: 1;
+  }
+  
+  .bar-charts-container {
+    grid-column: 1;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .bar-charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-wrapper {
+    height: 350px;
+  }
+  
+  .pie-wrapper {
+    height: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .charts-container {
+    padding: 1rem;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem;
+  }
+  
+  .chart-wrapper {
+    height: 300px;
+  }
+  
+  .pie-wrapper {
+    height: 300px;
+  }
+}

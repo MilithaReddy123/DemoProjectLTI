@@ -182,15 +182,30 @@ const buildErrorWorkbookBase64 = async (failedRows) => {
     fill: { type: 'pattern', patternType: 'solid', fgColor: '#C00000' },
     alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
   });
+  const wrapTopStyle = wb.createStyle({
+    alignment: { vertical: 'top', wrapText: true }
+  });
   const headers = [...EXCEL_COLUMNS.map((c) => c.header), 'Error Reason'];
   headers.forEach((h, i) => {
-    ws.column(i + 1).setWidth(Math.min(35, Math.max(12, h.length + 2)));
+    // Make the "Error Reason" column wider for readability
+    const width = h === 'Error Reason' ? 70 : Math.min(35, Math.max(12, h.length + 2));
+    ws.column(i + 1).setWidth(width);
     ws.cell(1, i + 1).string(h).style(headerStyle);
   });
   failedRows.forEach((r, idx) => {
     const rowNum = 2 + idx;
     EXCEL_COLUMNS.forEach((c, i) => ws.cell(rowNum, i + 1).string(String(r[c.key] ?? '')));
-    ws.cell(rowNum, headers.length).string(String(r.__errorReason || ''));
+    // Put each reason on its own line, wrap the cell, and increase row height.
+    const raw = String(r.__errorReason || '');
+    const lines = raw
+      .split(/;|\n/g)
+      .map((s) => String(s || '').trim())
+      .filter(Boolean);
+    const text = lines.length ? lines.join('\n') : raw;
+    ws.cell(rowNum, headers.length).string(text).style(wrapTopStyle);
+    if (lines.length) {
+      ws.row(rowNum).setHeight(Math.min(240, Math.max(18, lines.length * 18)));
+    }
   });
   const buf = await wb.writeToBuffer();
   return buf.toString('base64');
@@ -489,15 +504,31 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
       const usernames = [...new Set([...addList, ...editList].map((r) => String(r.username || '').trim()).filter(Boolean))];
       const ids = [...new Set(editList.map((r) => String(r.id || '').trim()).filter(Boolean))];
 
-      const params = [];
-      const where = [];
-      if (emails.length) { where.push(`LOWER(email) IN (${emails.map(() => '?').join(',')})`); params.push(...emails); }
-      if (usernames.length) { where.push(`username IN (${usernames.map(() => '?').join(',')})`); params.push(...usernames); }
+      // Optimized: Use UNION instead of OR for better index usage
       const existingByEmail = new Map();
       const existingByUsername = new Map();
-      if (where.length) {
-        const [existing] = await pool.query(`SELECT id, LOWER(email) as email, username FROM users WHERE ${where.join(' OR ')}`, params);
-        existing.forEach((u) => { if (u.email) existingByEmail.set(u.email, u.id); if (u.username) existingByUsername.set(u.username, u.id); });
+      
+      if (emails.length || usernames.length) {
+        const queries = [];
+        const params = [];
+        
+        if (emails.length) {
+          queries.push(`SELECT id, LOWER(email) as email, NULL as username FROM users WHERE LOWER(email) IN (${emails.map(() => '?').join(',')})`);
+          params.push(...emails);
+        }
+        
+        if (usernames.length) {
+          queries.push(`SELECT id, NULL as email, username FROM users WHERE username IN (${usernames.map(() => '?').join(',')})`);
+          params.push(...usernames);
+        }
+        
+        if (queries.length > 0) {
+          const [existing] = await pool.query(queries.join(' UNION '), params);
+          existing.forEach((u) => { 
+            if (u.email) existingByEmail.set(u.email, u.id); 
+            if (u.username) existingByUsername.set(u.username, u.id); 
+          });
+        }
       }
 
       let existingIds = new Set();
@@ -653,6 +684,11 @@ const bulkUpsertFromExcel = (pool) => async (req, res) => {
 // List all users with joined interests
 const getAllUsers = (pool) => async (req, res) => {
   try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 200);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+    const [[{ total }]] = await pool.query(`SELECT COUNT(*) AS total FROM users`);
+
     const [rows] = await pool.query(`
       SELECT 
         u.id,
@@ -673,7 +709,8 @@ const getAllUsers = (pool) => async (req, res) => {
       FROM users u
       LEFT JOIN user_interests ui ON u.id = ui.user_id
       ORDER BY u.created_at DESC
-    `);
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
 
     const users = rows.map((r) => {
       const creditCardLast4 = sanitizeValue(r.credit_card_last4);
@@ -705,8 +742,7 @@ const getAllUsers = (pool) => async (req, res) => {
       };
     });
 
-
-    return res.json(users);
+    return res.json({ items: users, total: Number(total) || 0, limit, offset });
   } catch (err) {
     console.error('Error fetching users:', err.message);
     return res.status(500).json({
@@ -806,22 +842,64 @@ const createUser = (pool) => async (req, res) => {
 
     // Validate required fields (aligned with frontend form)
     if (!name || !email || !mobile || !state || !city || !username || !password) {
-      await connection.release();
       return res.status(400).json({
         message:
           'Required fields: name, email, mobile, state, city, username, password'
       });
     }
 
+    // Name validation: min 2 chars, only letters and spaces (no numbers) - aligned with frontend
+    if (typeof name !== 'string' || name.trim().length < 2) {
+      return res.status(400).json({
+        message: 'Name must be at least 2 characters.'
+      });
+    }
+    const namePattern = /^[a-zA-Z\s]+$/;
+    if (!namePattern.test(name.trim())) {
+      return res.status(400).json({
+        message: 'Name can only contain letters and spaces (numbers not allowed).'
+      });
+    }
+
+    // Email format validation (aligned with frontend)
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    if (!emailPattern.test(email.trim())) {
+      return res.status(400).json({
+        message: 'Please enter a valid email address with a valid domain extension (e.g., .com, .org, .net).'
+      });
+    }
+
+    // Username format validation (aligned with frontend: 4-20 chars, letters, numbers, _, -, .)
+    const usernamePattern = /^[a-zA-Z0-9._-]{4,20}$/;
+    if (!usernamePattern.test(username)) {
+      return res.status(400).json({
+        message: 'Username must be 4-20 characters (letters, numbers, _, -, . only).'
+      });
+    }
+
+    // Mobile validation (10 digits)
+    const mobileDigits = mobile.replace(/\D/g, '');
+    if (mobileDigits.length !== 10) {
+      return res.status(400).json({
+        message: 'Mobile number must be exactly 10 digits.'
+      });
+    }
+
+    // Password strength validation (aligned with frontend)
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/;
+    if (password.length < 8 || !passwordPattern.test(password)) {
+      return res.status(400).json({
+        message: 'Password must be at least 8 characters and include uppercase, lowercase, number and special character.'
+      });
+    }
+
     if (!Array.isArray(hobbies) || hobbies.length === 0) {
-      await connection.release();
       return res.status(400).json({
         message: 'Please select at least one hobby'
       });
     }
 
     if (!Array.isArray(techInterests) || techInterests.length === 0) {
-      await connection.release();
       return res.status(400).json({
         message: 'Please select at least one tech interest'
       });
@@ -829,15 +907,14 @@ const createUser = (pool) => async (req, res) => {
 
     await connection.beginTransaction();
 
-    // Check if user exists by username or email
+    // Check if user exists by username or email - optimized: use UNION for better index usage
     const [existing] = await connection.query(
-      'SELECT id FROM users WHERE username = ? OR email = ?',
+      'SELECT id FROM users WHERE username = ? UNION SELECT id FROM users WHERE email = ?',
       [username, email]
     );
 
     if (existing.length > 0) {
       await connection.rollback();
-      await connection.release();
       return res.status(400).json({
         message: 'Username or email already exists.'
       });
@@ -881,7 +958,7 @@ const createUser = (pool) => async (req, res) => {
       id: userId
     });
   } catch (err) {
-    await connection.rollback();
+    try { await connection.rollback(); } catch {}
     console.error('Error creating user:', err.message);
     return res.status(500).json({
       message: 'Internal server error: ' + err.message
@@ -914,10 +991,95 @@ const updateUser = (pool) => async (req, res) => {
 
     await connection.beginTransaction();
 
-    // Update users table (username is not editable)
+    // Ensure user exists and safely handle optional fields (some UIs don't send username on update)
+    const [existingUserRows] = await connection.query(
+      'SELECT id, name, email, username FROM users WHERE id = ?',
+      [id]
+    );
+    if (!existingUserRows.length) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const existingUser = existingUserRows[0];
+    const nextName = sanitizeValue(name) ?? existingUser.name;
+    const nextEmail = sanitizeValue(email) ?? existingUser.email;
+    const nextUsername = sanitizeValue(username) ?? existingUser.username;
+
+    // Prevent accidental null/empty values on NOT NULL columns
+    if (!nextName || !nextEmail || !nextUsername) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'Invalid update: name/email/username cannot be empty.' });
+    }
+
+    // Name validation: min 2 chars, only letters and spaces (no numbers) - aligned with frontend
+    if (name && name !== existingUser.name) {
+      if (typeof name !== 'string' || name.trim().length < 2) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: 'Name must be at least 2 characters.'
+        });
+      }
+      const namePattern = /^[a-zA-Z\s]+$/;
+      if (!namePattern.test(nextName.trim())) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: 'Name can only contain letters and spaces (numbers not allowed).'
+        });
+      }
+    }
+
+    // Email format validation (aligned with frontend)
+    if (email && email !== existingUser.email) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+      if (!emailPattern.test(nextEmail.trim())) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: 'Please enter a valid email address with a valid domain extension (e.g., .com, .org, .net).'
+        });
+      }
+    }
+
+    // Username format validation (aligned with frontend: 4-20 chars, letters, numbers, _, -, .)
+    if (username && username !== existingUser.username) {
+      const usernamePattern = /^[a-zA-Z0-9._-]{4,20}$/;
+      if (!usernamePattern.test(nextUsername)) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: 'Username must be 4-20 characters (letters, numbers, _, -, . only).'
+        });
+      }
+    }
+
+    // Mobile validation (if provided, must be 10 digits)
+    if (mobile) {
+      const mobileDigits = mobile.replace(/\D/g, '');
+      if (mobileDigits.length !== 10) {
+        await connection.rollback();
+        return res.status(400).json({
+          message: 'Mobile number must be exactly 10 digits.'
+        });
+      }
+    }
+
+    // Uniqueness checks (DB has UNIQUE constraints; do a friendly 400 before hitting ER_DUP_ENTRY)
+    // Optimized: use UNION instead of OR for better index usage
+    const [conflicts] = await connection.query(
+      `SELECT id, email, username FROM users WHERE email = ? AND id <> ? 
+       UNION 
+       SELECT id, email, username FROM users WHERE username = ? AND id <> ? 
+       LIMIT 1`,
+      [nextEmail, id, nextUsername, id]
+    );
+    if (conflicts.length) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'Email or username already exists.' });
+    }
+
+    // Update users table
     await connection.query(
-      'UPDATE users SET name = ?,username=?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [name,username, email, id]
+      'UPDATE users SET name = ?, username = ?, email = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [nextName, nextUsername, nextEmail, id]
     );
 
     // Check if user_interests row exists for this user
@@ -977,8 +1139,11 @@ const updateUser = (pool) => async (req, res) => {
 
     return res.json({ message: 'User updated successfully' });
   } catch (err) {
-    await connection.rollback();
+    try { await connection.rollback(); } catch {}
     console.error('Error updating user:', err.message);
+    if (err && err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'Email or username already exists.' });
+    }
     return res.status(500).json({
       message: 'Internal server error: ' + err.message
     });
@@ -1004,6 +1169,153 @@ const deleteUser = (pool) => async (req, res) => {
   }
 };
 
+// Chart aggregation endpoints - optimized queries
+const getStateDistribution = (pool) => async (_req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        COALESCE(ui.state, 'Unknown') as label,
+        COUNT(*) as value
+      FROM users u
+      LEFT JOIN user_interests ui ON u.id = ui.user_id
+      WHERE ui.state IS NOT NULL
+      GROUP BY ui.state
+      ORDER BY value DESC
+    `);
+    return res.json(rows);
+  } catch (err) {
+    console.error('Error fetching state distribution:', err.message);
+    return res.status(500).json({ message: 'Internal server error: ' + err.message });
+  }
+};
+
+const getCityDistribution = (pool) => async (_req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        COALESCE(ui.city, 'Unknown') as label,
+        COUNT(*) as value
+      FROM users u
+      LEFT JOIN user_interests ui ON u.id = ui.user_id
+      WHERE ui.city IS NOT NULL
+      GROUP BY ui.city
+      ORDER BY value DESC
+      LIMIT 20
+    `);
+    return res.json(rows);
+  } catch (err) {
+    console.error('Error fetching city distribution:', err.message);
+    return res.status(500).json({ message: 'Internal server error: ' + err.message });
+  }
+};
+
+const getGenderDistribution = (pool) => async (_req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        COALESCE(ui.gender, 'Unknown') as label,
+        COUNT(*) as value
+      FROM users u
+      LEFT JOIN user_interests ui ON u.id = ui.user_id
+      WHERE ui.gender IS NOT NULL
+      GROUP BY ui.gender
+      ORDER BY value DESC
+    `);
+    return res.json(rows);
+  } catch (err) {
+    console.error('Error fetching gender distribution:', err.message);
+    return res.status(500).json({ message: 'Internal server error: ' + err.message });
+  }
+};
+
+const getHobbiesDistribution = (pool) => async (_req, res) => {
+  try {
+    // MySQL 8.0+ JSON_TABLE approach for optimal performance(JSON_TABLE is a feature that lets you treat elements of a JSON array as rows in a virtual table.)
+    const [rows] = await pool.query(`
+      SELECT 
+        hobby as label,
+        COUNT(*) as value
+      FROM users u
+      INNER JOIN user_interests ui ON u.id = ui.user_id
+      CROSS JOIN JSON_TABLE(
+        ui.hobbies,
+        '$[*]' COLUMNS (hobby VARCHAR(100) PATH '$')
+      ) AS jt
+      WHERE ui.hobbies IS NOT NULL AND JSON_LENGTH(ui.hobbies) > 0
+      GROUP BY hobby
+      ORDER BY value DESC
+    `);
+    return res.json(rows);
+  } catch (err) {
+    // Fallback for older MySQL versions
+    try {
+      const [allRows] = await pool.query(`
+        SELECT hobbies FROM user_interests WHERE hobbies IS NOT NULL AND JSON_LENGTH(hobbies) > 0
+      `);
+      const hobbyCounts = {};
+      allRows.forEach((row) => {
+        const hobbies = parseJsonField(row.hobbies);
+        if (Array.isArray(hobbies)) {
+          hobbies.forEach((h) => {
+            hobbyCounts[h] = (hobbyCounts[h] || 0) + 1;
+          });
+        }
+      });
+      const result = Object.entries(hobbyCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+      return res.json(result);
+    } catch (fallbackErr) {
+      console.error('Error fetching hobbies distribution:', err.message);
+      return res.status(500).json({ message: 'Internal server error: ' + err.message });
+    }
+  }
+};
+
+const getTechInterestsDistribution = (pool) => async (_req, res) => {
+  try {
+    // MySQL 8.0+ JSON_TABLE approach for optimal performance
+    const [rows] = await pool.query(`
+      SELECT 
+        tech as label,
+        COUNT(*) as value
+      FROM users u
+      INNER JOIN user_interests ui ON u.id = ui.user_id
+      CROSS JOIN JSON_TABLE(
+        ui.tech_interests,
+        '$[*]' COLUMNS (tech VARCHAR(100) PATH '$')
+      ) AS jt
+      WHERE ui.tech_interests IS NOT NULL AND JSON_LENGTH(ui.tech_interests) > 0
+      GROUP BY tech
+      ORDER BY value DESC
+    `);
+    return res.json(rows);
+  } catch (err) {
+    // Fallback for older MySQL versions
+    try {
+      const [allRows] = await pool.query(`
+        SELECT tech_interests FROM user_interests WHERE tech_interests IS NOT NULL AND JSON_LENGTH(tech_interests) > 0
+      `);
+      const techCounts = {};
+      allRows.forEach((row) => {
+        const techs = parseJsonField(row.tech_interests);
+        if (Array.isArray(techs)) {
+          techs.forEach((t) => {
+            techCounts[t] = (techCounts[t] || 0) + 1;
+          });
+        }
+      });
+      const result = Object.entries(techCounts)
+        .map(([label, value]) => ({ label, value }))
+        .sort((a, b) => b.value - a.value);
+      return res.json(result);
+    } catch (fallbackErr) {
+      console.error('Error fetching tech interests distribution:', err.message);
+      return res.status(500).json({ message: 'Internal server error: ' + err.message });
+    }
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -1012,6 +1324,11 @@ module.exports = {
   deleteUser,
   getLookups,
   downloadExcelTemplate,
-  bulkUpsertFromExcel
+  bulkUpsertFromExcel,
+  getStateDistribution,
+  getCityDistribution,
+  getGenderDistribution,
+  getHobbiesDistribution,
+  getTechInterestsDistribution
 };
 

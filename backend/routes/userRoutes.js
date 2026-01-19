@@ -8,7 +8,12 @@ const {
   deleteUser,
   getLookups,
   downloadExcelTemplate,
-  bulkUpsertFromExcel
+  bulkUpsertFromExcel,
+  getStateDistribution,
+  getCityDistribution,
+  getGenderDistribution,
+  getHobbiesDistribution,
+  getTechInterestsDistribution
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -22,6 +27,13 @@ module.exports = (pool) => {
   router.get('/lookups', getLookups());
   router.get('/excel-template', downloadExcelTemplate(pool));
   router.post('/bulk', upload.single('file'), bulkUpsertFromExcel(pool));
+
+  // Chart aggregation endpoints (must be before /:id route)
+  router.get('/charts/state', getStateDistribution(pool));
+  router.get('/charts/city', getCityDistribution(pool));
+  router.get('/charts/gender', getGenderDistribution(pool));
+  router.get('/charts/hobbies', getHobbiesDistribution(pool));
+  router.get('/charts/tech-interests', getTechInterestsDistribution(pool));
 
   router.get('/', getAllUsers(pool));
   router.get('/:id', getUserById(pool));

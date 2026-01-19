@@ -1,4 +1,4 @@
-<div class="p-p-4">
+<div class="home-container p-p-4">
   <!-- Header -->
   <div class="p-d-flex p-jc-between p-ai-center p-mb-4">
     <div>
@@ -8,6 +8,14 @@
       <p class="p-text-secondary p-mt-1 p-mb-0">Manage member registrations</p>
     </div>
     <div style="display: flex; gap: 0.5rem;">
+      <button
+        pButton
+        type="button"
+        label="Charts"
+        icon="pi pi-chart-bar"
+        (click)="navigateToCharts()"
+        class="p-button-info"
+      ></button>
       <button
         pButton
         type="button"
@@ -142,7 +150,14 @@
         <!-- Step 2: errors -->
         <div class="p-mt-4" *ngIf="bulkErrorRows?.length">
           <p-message severity="error" [text]="'Found ' + bulkErrorRows.length + ' error rows. Fix and re-upload.'"></p-message>
-          <p-table [value]="bulkErrorRows" responsiveLayout="scroll" styleClass="p-datatable-sm p-mt-2">
+          <p-table
+            [value]="bulkErrorRows"
+            responsiveLayout="scroll"
+            [paginator]="true"
+            [rows]="5"
+            [rowsPerPageOptions]="[5,10,20]"
+            styleClass="p-datatable-sm p-datatable-gridlines p-mt-2"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th style="width: 120px;">Row</th>
@@ -152,7 +167,24 @@
             <ng-template pTemplate="body" let-e>
               <tr>
                 <td>{{ e.rowNumber }}</td>
-                <td>{{ e.reason }}</td>
+                <td class="bulk-error-reason">
+                  <div class="bulk-error-reason__meta" *ngIf="(e.reasons || []).length">
+                    <span class="p-text-secondary" style="font-size:0.8rem;">{{ (e.reasons || []).length }} issue(s)</span>
+                  </div>
+                  <ul class="bulk-error-reason__list" *ngIf="(e.reasons || []).length; else rawReason">
+                    <li *ngFor="let r of bulkVisibleReasons(e)">{{ r }}</li>
+                  </ul>
+                  <ng-template #rawReason>
+                    <div class="bulk-error-reason__raw" [pTooltip]="e.reason" tooltipPosition="top">{{ e.reason }}</div>
+                  </ng-template>
+                  <a
+                    *ngIf="bulkHasMoreReasons(e)"
+                    class="bulk-error-reason__toggle"
+                    (click)="toggleBulkRowExpanded(e.rowNumber)"
+                  >
+                    {{ isBulkRowExpanded(e.rowNumber) ? 'Show less' : 'Show more' }}
+                  </a>
+                </td>
               </tr>
             </ng-template>
           </p-table>
@@ -235,7 +267,7 @@
       #dt
       [value]="filteredUsers"
       [loading]="loading"
-      [paginator]="true"
+      [paginator]="!pagerVisible"
       [rows]="10"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
@@ -633,4 +665,36 @@
       (cancelled)="onDialogHide()"
     ></app-user-form>
   </p-dialog>
+
+  <!-- Floating 3-dots button -->
+  <button
+    pButton
+    type="button"
+    class="pager-fab p-button-rounded p-button-info"
+    icon="pi pi-ellipsis-h"
+    pTooltip="Pagination"
+    tooltipPosition="left"
+    (click)="togglePager()"
+  ></button>
+
+  <!-- Floating Draggable Pagination (opens from button) -->
+  <div *ngIf="pagerVisible" class="floating-pager" cdkDrag (cdkDragEnded)="onPagerDragEnded($event)">
+    <div class="floating-pager__header" cdkDragHandle>
+      <div class="floating-pager__title-wrap">
+        <span class="floating-pager__title">Pagination</span>
+        <span class="floating-pager__sub">{{ pageRangeStart() }}-{{ pageRangeEnd() }} / {{ totalRecords }}</span>
+      </div>
+      <button pButton type="button" class="p-button-text p-button-sm floating-pager__close" icon="pi pi-times" (click)="closePager()"></button>
+    </div>
+    <p-paginator
+      [first]="pageOffset"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      [rowsPerPageOptions]="[5,10,25,50]"
+      [dropdownAppendTo]="'body'"
+      [dropdownScrollHeight]="'200px'"
+      [showCurrentPageReport]="false"
+      (onPageChange)="onPageChange($event)"
+    ></p-paginator>
+  </div>
 </div>

@@ -1,0 +1,67 @@
+<div class="charts-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-arrow-left"
+      label="Back"
+      (click)="navigateToHome()"
+      class="p-button-text back-button"
+    ></button>
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <i class="pi pi-chart-bar"></i>
+        Analytics Dashboard
+      </h1>
+      <p class="dashboard-subtitle">Visual insights into user data</p>
+    </div>
+  </div>
+
+  <p-toast></p-toast>
+
+  <!-- Charts Layout: Pie chart on left, Bar charts on right -->
+  <div class="charts-layout">
+    <!-- Left: Pie Chart -->
+    <div class="chart-item pie-chart-item">
+      <p-card header="Users by States" styleClass="chart-card">
+        <div class="chart-wrapper pie-wrapper">
+          <p-chart 
+            type="pie" 
+            [data]="stateChartData" 
+            [options]="chartOptions"
+          ></p-chart>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Right: Two Bar Charts -->
+    <div class="bar-charts-container">
+      <!-- User Hobbies Bar Chart -->
+      <div class="chart-item">
+        <p-card header="User Hobbies" styleClass="chart-card">
+          <div class="chart-wrapper">
+            <p-chart 
+              type="bar" 
+              [data]="hobbiesChartData" 
+              [options]="barChartOptions"
+            ></p-chart>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- User Interests Bar Chart -->
+      <div class="chart-item">
+        <p-card header="User Interests" styleClass="chart-card">
+          <div class="chart-wrapper">
+            <p-chart 
+              type="bar" 
+              [data]="techInterestsChartData" 
+              [options]="barChartOptions"
+            ></p-chart>
+          </div>
+        </p-card>
+      </div>
+    </div>
+  </div>
+</div>

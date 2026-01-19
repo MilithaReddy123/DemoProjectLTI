@@ -26,7 +26,10 @@
             />
           </span>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.username.touched && f.username.errors">
-            Username is required (4-20 characters)
+            <span *ngIf="f.username.errors['required']">Username is required</span>
+            <span *ngIf="f.username.errors['pattern'] && !f.username.errors['required']"
+              >Username must be 4-20 characters (letters, numbers, underscore _ and @ only)</span
+            >
           </small>
         </div>
 
@@ -44,7 +47,7 @@
             autocomplete="current-password"
           ></p-password>
           <small class="p-error" style="display: block; margin-top: 0.25rem;" *ngIf="f.password.touched && f.password.errors">
-            Password is required
+            <span *ngIf="f.password.errors['required']">Password is required</span>
           </small>
         </div>
 

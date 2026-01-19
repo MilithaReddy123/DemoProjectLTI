@@ -1,4 +1,168 @@
+/* Home container for drag boundary */
+.home-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* Floating draggable pagination */
+.floating-pager {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  width: 360px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
+  /* CRITICAL: overflow visible allows dropdown to render outside container */
+  overflow: visible;
+  /* Ensure dropdown can flip upward when near bottom */
+  max-height: calc(100vh - 40px);
+  /* Allow dragging anywhere in viewport */
+  cursor: default;
+  /* Ensure no clipping of child elements */
+  contain: none;
+}
+
+.floating-pager.cdk-drag-dragging {
+  transition: none;
+}
+
+.floating-pager__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: move;
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: #fff;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+}
+
+.floating-pager__title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.floating-pager__title {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.floating-pager__sub {
+  font-size: 12px;
+  opacity: 0.95;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .floating-pager .p-paginator {
+  border: 0;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  background: #fff;
+  /* Ensure paginator container doesn't clip dropdown */
+  overflow: visible;
+  position: relative;
+}
+
+/* Ensure dropdown inside paginator can render outside */
+:host ::ng-deep .floating-pager .p-paginator .p-dropdown {
+  overflow: visible;
+  position: relative;
+}
+
+/* CRITICAL: Ensure PrimeNG dropdown panel renders correctly when appended to body */
+:host ::ng-deep .p-paginator .p-dropdown {
+  position: relative;
+  z-index: 1;
+}
+
+/* Force dropdown panel appended to body (from floating paginator) to be fully visible */
+:host ::ng-deep body > .p-dropdown-panel {
+  z-index: 10001 !important;
+  max-height: 180px !important;
+  overflow-y: auto !important;
+  /* Ensure panel is never clipped */
+  visibility: visible !important;
+  opacity: 1 !important;
+  /* Ensure proper positioning */
+  position: fixed !important;
+  /* Ensure dropdown can flip upward when near bottom */
+  transform-origin: center bottom;
+}
+
+/* When dropdown opens upward (p-dropdown-panel-above class) */
+:host ::ng-deep body > .p-dropdown-panel.p-dropdown-panel-above {
+  transform-origin: center bottom;
+  margin-bottom: 4px;
+}
+
+/* When dropdown opens downward */
+:host ::ng-deep body > .p-dropdown-panel.p-dropdown-panel-below {
+  transform-origin: center top;
+  margin-top: 4px;
+}
+
+/* Also target dropdown panel that might be inside paginator (fallback) */
+:host ::ng-deep .floating-pager .p-paginator .p-dropdown-panel,
+:host ::ng-deep .p-paginator .p-dropdown-panel {
+  z-index: 10001 !important;
+  max-height: 180px !important;
+  overflow-y: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.floating-pager__close {
+  color: #fff !important;
+}
+
+/* Floating 3-dots button */
+.pager-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 10000;
+  width: 46px;
+  height: 46px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+}
+
+:host ::ng-deep .pager-fab .p-button-icon {
+  font-size: 1.1rem;
+}
+
 /* Excel Bulk Upload Dialog Styles */
+
+.bulk-error-reason {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.bulk-error-reason__list {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.bulk-error-reason__list li {
+  margin: 0.15rem 0;
+}
+
+.bulk-error-reason__raw {
+  white-space: pre-wrap;
+}
+
+.bulk-error-reason__toggle {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.82rem;
+  color: #1976d2;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 /* Stepper Animation */
 @keyframes stepPop {

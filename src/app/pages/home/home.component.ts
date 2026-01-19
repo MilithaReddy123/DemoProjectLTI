@@ -34,6 +34,10 @@ export class HomeComponent implements OnInit {
   displayDeleteDialog = false;
   userToDelete: User | null = null;
   loading = false;
+  totalRecords = 0;
+  pageSize = 10;
+  pageOffset = 0;
+  pagerVisible = false;
   fieldErrors: Record<string, Record<string, string>> = {};
   savingChanges = false;
   editedRows: Record<string, { original: User; last: Record<string, any>; events: { field: string; previousValue: any; currentValue: any; at: string }[] }> = {};
@@ -52,7 +56,9 @@ export class HomeComponent implements OnInit {
   bulkValidating = false;
   bulkUploading = false;
   bulkResult: any = null;
-  bulkErrorRows: { rowNumber: number; reason: string }[] = [];
+  bulkErrorRows: { rowNumber: number; reason: string; reasons?: string[] }[] = [];
+  bulkReasonLimit = 3;
+  private bulkExpandedRows = new Set<number>();
   downloadMode: 'blank' | 'data' = 'blank';
   downloadModeOptions: Opt<'blank' | 'data'>[] = [
     { label: 'Blank Template', value: 'blank' },
@@ -82,8 +88,25 @@ export class HomeComponent implements OnInit {
   }
 
   logout(): void { localStorage.removeItem('current_user'); this.router.navigate(['/login']); }
+  navigateToCharts(): void { this.router.navigate(['/charts']); }
 
-  ngOnInit(): void { this.loadUsers(); this.loadLocations(); }
+  ngOnInit(): void { 
+    this.loadUsers(); 
+    this.loadLocations();
+    // Monitor dropdown opens to fix positioning (only watch for dropdown panel additions)
+    setTimeout(() => {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1 && (node as Element).classList?.contains('p-dropdown-panel')) {
+              setTimeout(() => this.fixDropdownPosition(), 10);
+            }
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true });
+    }, 500);
+  }
 
   // -------- Bulk Excel actions --------
   openBulkDialog(): void {
@@ -93,6 +116,7 @@ export class HomeComponent implements OnInit {
     this.bulkFileError = '';
     this.bulkResult = null;
     this.bulkErrorRows = [];
+    this.bulkExpandedRows.clear();
   }
 
   onBulkDialogHide(): void {
@@ -102,6 +126,7 @@ export class HomeComponent implements OnInit {
     this.bulkResult = null;
     this.bulkErrorRows = [];
     this.bulkStep = 1;
+    this.bulkExpandedRows.clear();
     // Clear file input element
     if (this.bulkFileInput?.nativeElement) {
       this.bulkFileInput.nativeElement.value = '';
@@ -120,6 +145,45 @@ export class HomeComponent implements OnInit {
     this.bulkStep = 1;
     this.bulkResult = null;
     this.bulkErrorRows = [];
+    this.bulkExpandedRows.clear();
+  }
+
+  private splitBulkReasons(reason: any): string[] {
+    const raw = String(reason || '').trim();
+    if (!raw) return [];
+    const parts = raw
+      .split(/;|\n/g)
+      .map(s => s.trim())
+      .filter(Boolean);
+    // De-dupe while preserving order
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const p of parts) {
+      const key = p.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(p);
+    }
+    return out;
+  }
+
+  isBulkRowExpanded(rowNumber: number): boolean {
+    return this.bulkExpandedRows.has(rowNumber);
+  }
+
+  toggleBulkRowExpanded(rowNumber: number): void {
+    if (this.bulkExpandedRows.has(rowNumber)) this.bulkExpandedRows.delete(rowNumber);
+    else this.bulkExpandedRows.add(rowNumber);
+  }
+
+  bulkVisibleReasons(e: { rowNumber: number; reasons?: string[] }): string[] {
+    const list = e?.reasons || [];
+    if (this.isBulkRowExpanded(e.rowNumber)) return list;
+    return list.slice(0, this.bulkReasonLimit);
+  }
+
+  bulkHasMoreReasons(e: { rowNumber: number; reasons?: string[] }): boolean {
+    return (e?.reasons || []).length > this.bulkReasonLimit;
   }
 
   private getDownloadedBy(): string {
@@ -145,7 +209,7 @@ export class HomeComponent implements OnInit {
     this.userService.validateBulkExcel(this.bulkFile).subscribe({
       next: (res: any) => {
         this.bulkResult = res;
-        this.bulkErrorRows = res?.errorDetails || [];
+        this.bulkErrorRows = (res?.errorDetails || []).map((e: any) => ({ ...e, reasons: this.splitBulkReasons(e?.reason) }));
         this.bulkStep = this.bulkErrorRows.length ? 2 : 3;
         this.bulkValidating = false;
       },
@@ -162,7 +226,7 @@ export class HomeComponent implements OnInit {
     this.userService.uploadBulkExcel(this.bulkFile).subscribe({
       next: (res: any) => {
         this.bulkResult = res;
-        this.bulkErrorRows = res?.errorDetails || [];
+        this.bulkErrorRows = (res?.errorDetails || []).map((e: any) => ({ ...e, reasons: this.splitBulkReasons(e?.reason) }));
         this.bulkStep = 3;
         this.bulkUploading = false;
         this.toast('success', 'Uploaded successfully', 'Excel file has been processed successfully.');
@@ -216,8 +280,10 @@ export class HomeComponent implements OnInit {
 
   loadUsers(): void {
     this.loading = true;
-    this.userService.getUsers().subscribe({
-      next: (data) => {
+    this.userService.getUsers(this.pageSize, this.pageOffset).subscribe({
+      next: (res) => {
+        const data = res?.items || [];
+        this.totalRecords = Number(res?.total) || 0;
         this.users = data;
         this.baselineUsers = Object.fromEntries(data.filter(u => u.id).map(u => [u.id!, this.clone(u)]));
         this.applyLocalFilters();
@@ -225,6 +291,98 @@ export class HomeComponent implements OnInit {
       },
       error: () => { this.filteredUsers = []; this.loading = false; }
     });
+  }
+
+  onPageChange(e: any): void {
+    if (this.hasPendingChanges()) {
+      this.toast('warn', 'Unsaved changes', 'Save changes before changing pages.');
+      return;
+    }
+    this.pageSize = Number(e?.rows) || this.pageSize;
+    this.pageOffset = Number(e?.first) || 0;
+    this.loadUsers();
+  }
+
+  togglePager(): void {
+    this.pagerVisible = !this.pagerVisible;
+  }
+
+  closePager(): void {
+    this.pagerVisible = false;
+  }
+
+  onPagerDragEnded(event: any): void {
+    // Ensure paginator stays within viewport bounds after drag
+    const el = event.source.element.nativeElement;
+    const rect = el.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let left = rect.left;
+    let top = rect.top;
+    
+    // Constrain horizontally
+    if (left < 0) left = 0;
+    if (left + rect.width > viewportWidth) left = viewportWidth - rect.width;
+    
+    // Constrain vertically (allow dragging below table)
+    if (top < 0) top = 0;
+    if (top + rect.height > viewportHeight) top = viewportHeight - rect.height;
+    
+    // Apply corrected position
+    if (left !== rect.left || top !== rect.top) {
+      el.style.left = left + 'px';
+      el.style.top = top + 'px';
+      el.style.right = 'auto';
+      el.style.bottom = 'auto';
+    }
+    
+    // Fix dropdown positioning after drag
+    setTimeout(() => this.fixDropdownPosition(), 100);
+  }
+
+  fixDropdownPosition(): void {
+    // Find dropdown panel appended to body (from floating paginator)
+    const dropdownPanel = document.querySelector('body > .p-dropdown-panel') as HTMLElement;
+    if (!dropdownPanel || !dropdownPanel.offsetParent) return;
+    
+    const panelRect = dropdownPanel.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const dropdownHeight = panelRect.height || 180; // max-height from CSS
+    const spaceBelow = viewportHeight - panelRect.bottom;
+    const spaceAbove = panelRect.top;
+    
+    // Find the dropdown trigger in floating paginator
+    const dropdownTrigger = document.querySelector('.floating-pager .p-paginator .p-dropdown') as HTMLElement;
+    if (!dropdownTrigger) return;
+    
+    const triggerRect = dropdownTrigger.getBoundingClientRect();
+    
+    // If dropdown would be clipped at bottom, flip it upward
+    if (spaceBelow < dropdownHeight && spaceAbove >= dropdownHeight) {
+      // Calculate position above trigger
+      const bottomPosition = viewportHeight - triggerRect.top;
+      dropdownPanel.style.top = 'auto';
+      dropdownPanel.style.bottom = bottomPosition + 'px';
+      dropdownPanel.style.left = triggerRect.left + 'px';
+      dropdownPanel.classList.add('p-dropdown-panel-above');
+      dropdownPanel.classList.remove('p-dropdown-panel-below');
+    } else if (spaceBelow >= dropdownHeight) {
+      // Enough space below, ensure it opens downward
+      dropdownPanel.style.top = triggerRect.bottom + 'px';
+      dropdownPanel.style.bottom = 'auto';
+      dropdownPanel.style.left = triggerRect.left + 'px';
+      dropdownPanel.classList.add('p-dropdown-panel-below');
+      dropdownPanel.classList.remove('p-dropdown-panel-above');
+    }
+  }
+
+  pageRangeStart(): number {
+    return this.totalRecords ? this.pageOffset + 1 : 0;
+  }
+
+  pageRangeEnd(): number {
+    return Math.min(this.pageOffset + this.pageSize, this.totalRecords);
   }
 
   openAddUser(): void { this.displayAddDialog = true; }
@@ -397,12 +555,11 @@ export class HomeComponent implements OnInit {
     const email = str(u.email), username = str(u.username), mobile = str(u.mobile).replace(/\D/g, ''), cc = str(u.creditCard).replace(/\D/g, ''), addr = str(u.address);
 
     if (!email) e['email'] = 'Email is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e['email'] = 'Invalid email';
-    else if (!email.toLowerCase().endsWith('.com')) e['email'] = 'Must end with .com';
+    else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email)) e['email'] = 'Invalid email format';
 
     if (!username) e['username'] = 'Username is required';
-    else if (username.length < 4 || username.length > 20) e['username'] = '4-20 characters';
-    else if (!/^[a-zA-Z0-9._-]+$/.test(username)) e['username'] = 'Letters, numbers, _, -, . only';
+    else if (username.length < 4 || username.length > 20) e['username'] = 'Username must be 4-20 characters';
+    else if (!/^[a-zA-Z0-9._-]{4,20}$/.test(username)) e['username'] = 'Username must be 4-20 characters (letters, numbers, _, -, . only)';
 
     if (!mobile) e['mobile'] = 'Mobile required';
     else if (mobile.length !== 10) e['mobile'] = '10 digits required';

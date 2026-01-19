@@ -39,12 +39,17 @@ export class UserFormComponent implements OnInit, OnChanges {
     const arrValidator = (c: any) => (!c.value || !Array.isArray(c.value) || !c.value.length) ? { required: true } : null;
     this.userForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), (c: any) => c.value && /\d/.test(c.value) ? { hasNumbers: true } : null]],
-      email: ['', [Validators.required, Validators.email, (c: any) => c.value && !c.value.trim().endsWith('.com') ? { mustEndWithCom: true } : null]],
+      email: ['', [Validators.required, Validators.email, (c: any) => {
+        if (!c.value) return null;
+        const email = c.value.trim();
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+        return emailPattern.test(email) ? null : { invalidEmail: true };
+      }]],
       mobile: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
-      creditCard: ['', [Validators.required, Validators.pattern(/^\d{16}$/)]],
+      creditCard: ['', [Validators.required, Validators.pattern(/^(\d{16}|\d{4})$/)]],
       state: [null, Validators.required],
       city: [null, Validators.required],
-      gender: ['Male', Validators.required],
+      gender: [null, Validators.required],
       hobbies: [[], [Validators.required, arrValidator]],
       techInterests: [[], [Validators.required, arrValidator]],
       address: ['', [Validators.pattern(/^[a-zA-Z0-9\s,._-]*$/)]],
@@ -79,7 +84,12 @@ export class UserFormComponent implements OnInit, OnChanges {
       if (this.user.state) this.onStateChange(this.user.state);
       ['password', 'confirmPassword'].forEach(f => { this.userForm.get(f)?.clearValidators(); this.userForm.get(f)?.updateValueAndValidity(); });
     } else {
-      this.userForm.reset({ gender: 'Male', hobbies: [], techInterests: [] });
+      // Reset form for add mode
+      this.userForm.reset({ 
+        name: '', email: '', mobile: '', creditCard: '', state: null, city: null, 
+        gender: null, hobbies: [], techInterests: [], address: '', 
+        username: '', password: '', confirmPassword: '', dob: '' 
+      });
     }
   }
 

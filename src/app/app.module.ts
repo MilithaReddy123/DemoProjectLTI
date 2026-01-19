@@ -13,6 +13,7 @@ import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { HomeComponent } from './pages/home/home.component';
 import { UserFormComponent } from './shared/user-form/user-form.component';
+import { ChartsComponent } from './pages/charts/charts.component';
 
 // PrimeNG
 import { InputTextModule } from 'primeng/inputtext';
@@ -35,9 +36,13 @@ import { ToastModule } from 'primeng/toast';
 import { CalendarModule } from 'primeng/calendar';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { StepsModule } from 'primeng/steps';
+import { PaginatorModule } from 'primeng/paginator';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { ChartModule } from 'primeng/chart';
+import { TabViewModule } from 'primeng/tabview';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent],
+  declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent, ChartsComponent],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -65,7 +70,11 @@ import { StepsModule } from 'primeng/steps';
     ToastModule,
     CalendarModule,
     SplitButtonModule,
-    StepsModule
+    StepsModule,
+    PaginatorModule,
+    DragDropModule,
+    ChartModule,
+    TabViewModule
   ],
   providers: [MessageService],
   bootstrap: [AppComponent]
