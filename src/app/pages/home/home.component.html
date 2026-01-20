@@ -267,18 +267,15 @@
       #dt
       [value]="filteredUsers"
       [loading]="loading"
-      [paginator]="!pagerVisible"
-      [rows]="10"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
-      [rowsPerPageOptions]="[5, 10, 25, 50]"
+      [paginator]="false"
+      [rows]="pageSize"
       [globalFilterFields]="['email', 'username', 'mobile', 'city', 'state', 'gender', 'address']"
       responsiveLayout="scroll"
       [rowHover]="true"
       dataKey="id"
       editMode="cell"
       [style]="{ 'table-layout': 'fixed' }"
-      styleClass="p-datatable-sm"
+      styleClass="p-datatable-sm p-datatable-gridlines"
     >
       <ng-template pTemplate="caption">
         <div class="p-d-flex p-jc-between p-ai-center">
@@ -691,7 +688,7 @@
       [rows]="pageSize"
       [totalRecords]="totalRecords"
       [rowsPerPageOptions]="[5,10,25,50]"
-      [dropdownAppendTo]="'body'"
+      [dropdownAppendTo]="'self'"
       [dropdownScrollHeight]="'200px'"
       [showCurrentPageReport]="false"
       (onPageChange)="onPageChange($event)"

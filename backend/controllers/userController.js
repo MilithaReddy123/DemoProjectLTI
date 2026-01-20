@@ -1189,45 +1189,6 @@ const getStateDistribution = (pool) => async (_req, res) => {
   }
 };
 
-const getCityDistribution = (pool) => async (_req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        COALESCE(ui.city, 'Unknown') as label,
-        COUNT(*) as value
-      FROM users u
-      LEFT JOIN user_interests ui ON u.id = ui.user_id
-      WHERE ui.city IS NOT NULL
-      GROUP BY ui.city
-      ORDER BY value DESC
-      LIMIT 20
-    `);
-    return res.json(rows);
-  } catch (err) {
-    console.error('Error fetching city distribution:', err.message);
-    return res.status(500).json({ message: 'Internal server error: ' + err.message });
-  }
-};
-
-const getGenderDistribution = (pool) => async (_req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        COALESCE(ui.gender, 'Unknown') as label,
-        COUNT(*) as value
-      FROM users u
-      LEFT JOIN user_interests ui ON u.id = ui.user_id
-      WHERE ui.gender IS NOT NULL
-      GROUP BY ui.gender
-      ORDER BY value DESC
-    `);
-    return res.json(rows);
-  } catch (err) {
-    console.error('Error fetching gender distribution:', err.message);
-    return res.status(500).json({ message: 'Internal server error: ' + err.message });
-  }
-};
-
 const getHobbiesDistribution = (pool) => async (_req, res) => {
   try {
     // MySQL 8.0+ JSON_TABLE approach for optimal performance(JSON_TABLE is a feature that lets you treat elements of a JSON array as rows in a virtual table.)
@@ -1326,8 +1287,6 @@ module.exports = {
   downloadExcelTemplate,
   bulkUpsertFromExcel,
   getStateDistribution,
-  getCityDistribution,
-  getGenderDistribution,
   getHobbiesDistribution,
   getTechInterestsDistribution
 };

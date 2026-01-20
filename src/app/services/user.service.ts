@@ -54,14 +54,6 @@ export class UserService {
     return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/state`);
   }
 
-  getCityDistribution(): Observable<{ label: string; value: number }[]> {
-    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/city`);
-  }
-
-  getGenderDistribution(): Observable<{ label: string; value: number }[]> {
-    return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/gender`);
-  }
-
   getHobbiesDistribution(): Observable<{ label: string; value: number }[]> {
     return this.http.get<{ label: string; value: number }[]>(`${this.baseUrl}/users/charts/hobbies`);
   }

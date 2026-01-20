@@ -90,22 +90,9 @@ export class HomeComponent implements OnInit {
   logout(): void { localStorage.removeItem('current_user'); this.router.navigate(['/login']); }
   navigateToCharts(): void { this.router.navigate(['/charts']); }
 
-  ngOnInit(): void { 
-    this.loadUsers(); 
+  ngOnInit(): void {
+    this.loadUsers();
     this.loadLocations();
-    // Monitor dropdown opens to fix positioning (only watch for dropdown panel additions)
-    setTimeout(() => {
-      const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === 1 && (node as Element).classList?.contains('p-dropdown-panel')) {
-              setTimeout(() => this.fixDropdownPosition(), 10);
-            }
-          });
-        });
-      });
-      observer.observe(document.body, { childList: true });
-    }, 500);
   }
 
   // -------- Bulk Excel actions --------
@@ -337,44 +324,6 @@ export class HomeComponent implements OnInit {
       el.style.bottom = 'auto';
     }
     
-    // Fix dropdown positioning after drag
-    setTimeout(() => this.fixDropdownPosition(), 100);
-  }
-
-  fixDropdownPosition(): void {
-    // Find dropdown panel appended to body (from floating paginator)
-    const dropdownPanel = document.querySelector('body > .p-dropdown-panel') as HTMLElement;
-    if (!dropdownPanel || !dropdownPanel.offsetParent) return;
-    
-    const panelRect = dropdownPanel.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const dropdownHeight = panelRect.height || 180; // max-height from CSS
-    const spaceBelow = viewportHeight - panelRect.bottom;
-    const spaceAbove = panelRect.top;
-    
-    // Find the dropdown trigger in floating paginator
-    const dropdownTrigger = document.querySelector('.floating-pager .p-paginator .p-dropdown') as HTMLElement;
-    if (!dropdownTrigger) return;
-    
-    const triggerRect = dropdownTrigger.getBoundingClientRect();
-    
-    // If dropdown would be clipped at bottom, flip it upward
-    if (spaceBelow < dropdownHeight && spaceAbove >= dropdownHeight) {
-      // Calculate position above trigger
-      const bottomPosition = viewportHeight - triggerRect.top;
-      dropdownPanel.style.top = 'auto';
-      dropdownPanel.style.bottom = bottomPosition + 'px';
-      dropdownPanel.style.left = triggerRect.left + 'px';
-      dropdownPanel.classList.add('p-dropdown-panel-above');
-      dropdownPanel.classList.remove('p-dropdown-panel-below');
-    } else if (spaceBelow >= dropdownHeight) {
-      // Enough space below, ensure it opens downward
-      dropdownPanel.style.top = triggerRect.bottom + 'px';
-      dropdownPanel.style.bottom = 'auto';
-      dropdownPanel.style.left = triggerRect.left + 'px';
-      dropdownPanel.classList.add('p-dropdown-panel-below');
-      dropdownPanel.classList.remove('p-dropdown-panel-above');
-    }
   }
 
   pageRangeStart(): number {

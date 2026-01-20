@@ -4,6 +4,17 @@
   min-height: 100vh;
 }
 
+/* Make main table look straight and clearly separated with grid lines */
+:host ::ng-deep .home-container .p-datatable {
+  border-collapse: collapse;
+}
+
+:host ::ng-deep .home-container .p-datatable .p-datatable-thead > tr > th,
+:host ::ng-deep .home-container .p-datatable .p-datatable-tbody > tr > td {
+  border: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
 /* Floating draggable pagination */
 .floating-pager {
   position: fixed;
@@ -62,58 +73,69 @@
   border: 0;
   border-bottom-left-radius: 14px;
   border-bottom-right-radius: 14px;
-  background: #fff;
+  background: #20232a;
   /* Ensure paginator container doesn't clip dropdown */
   overflow: visible;
   position: relative;
 }
 
-/* Ensure dropdown inside paginator can render outside */
+/* PrimeNG paginator buttons styled like the reference (dark pills with active state) */
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-first,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-prev,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-next,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-last,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-pages .p-paginator-page {
+  background: #2c313c;
+  border: none;
+  color: #f1f5f9;
+  margin: 0.25rem 0.15rem;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  box-shadow: none;
+  font-size: 0.85rem;
+}
+
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: #4c51bf;
+  color: #ffffff;
+}
+
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-first .p-paginator-icon,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-prev .p-paginator-icon,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-next .p-paginator-icon,
+:host ::ng-deep .floating-pager .p-paginator .p-paginator-last .p-paginator-icon {
+  font-size: 0.8rem;
+}
+
+/* Rows-per-page dropdown styled as dark pill like in the screenshot */
 :host ::ng-deep .floating-pager .p-paginator .p-dropdown {
+  border-radius: 4px;
+  background: #2c313c;
+  border: none;
+  color: #f1f5f9;
+  height: 32px;
   overflow: visible;
   position: relative;
 }
 
-/* CRITICAL: Ensure PrimeNG dropdown panel renders correctly when appended to body */
-:host ::ng-deep .p-paginator .p-dropdown {
-  position: relative;
-  z-index: 1;
+:host ::ng-deep .floating-pager .p-paginator .p-dropdown .p-dropdown-label {
+  padding: 0.4rem 0.75rem;
+  color: #f1f5f9;
+  font-size: 0.85rem;
 }
 
-/* Force dropdown panel appended to body (from floating paginator) to be fully visible */
-:host ::ng-deep body > .p-dropdown-panel {
+:host ::ng-deep .floating-pager .p-paginator .p-dropdown .p-dropdown-trigger-icon {
+  color: #e5e7eb;
+}
+
+/* Force the rows-per-page dropdown panel to open UPWARD above the floating pager (reference-style) */
+:host ::ng-deep .floating-pager .p-paginator .p-dropdown-panel {
+  top: auto !important;
+  bottom: calc(100% + 6px) !important; /* offset above the dropdown */
+  left: 0 !important;
   z-index: 10001 !important;
-  max-height: 180px !important;
-  overflow-y: auto !important;
-  /* Ensure panel is never clipped */
-  visibility: visible !important;
-  opacity: 1 !important;
-  /* Ensure proper positioning */
-  position: fixed !important;
-  /* Ensure dropdown can flip upward when near bottom */
-  transform-origin: center bottom;
-}
-
-/* When dropdown opens upward (p-dropdown-panel-above class) */
-:host ::ng-deep body > .p-dropdown-panel.p-dropdown-panel-above {
-  transform-origin: center bottom;
-  margin-bottom: 4px;
-}
-
-/* When dropdown opens downward */
-:host ::ng-deep body > .p-dropdown-panel.p-dropdown-panel-below {
-  transform-origin: center top;
-  margin-top: 4px;
-}
-
-/* Also target dropdown panel that might be inside paginator (fallback) */
-:host ::ng-deep .floating-pager .p-paginator .p-dropdown-panel,
-:host ::ng-deep .p-paginator .p-dropdown-panel {
-  z-index: 10001 !important;
-  max-height: 180px !important;
-  overflow-y: auto !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  max-height: 220px;
 }
 
 .floating-pager__close {
@@ -222,7 +244,7 @@
 /* Top-right action buttons: Excel, Filters, Clear, Save Changes */
 .table-actions {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;

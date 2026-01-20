@@ -10,8 +10,6 @@ const {
   downloadExcelTemplate,
   bulkUpsertFromExcel,
   getStateDistribution,
-  getCityDistribution,
-  getGenderDistribution,
   getHobbiesDistribution,
   getTechInterestsDistribution
 } = require('../controllers/userController');
@@ -30,8 +28,6 @@ module.exports = (pool) => {
 
   // Chart aggregation endpoints (must be before /:id route)
   router.get('/charts/state', getStateDistribution(pool));
-  router.get('/charts/city', getCityDistribution(pool));
-  router.get('/charts/gender', getGenderDistribution(pool));
   router.get('/charts/hobbies', getHobbiesDistribution(pool));
   router.get('/charts/tech-interests', getTechInterestsDistribution(pool));
 
