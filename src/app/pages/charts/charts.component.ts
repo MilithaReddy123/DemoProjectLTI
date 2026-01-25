@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { UserService } from '../../services/user.service';
-import { MessageService } from 'primeng/api';
+import { ToastService } from '../../services/toast.service';
 import { EChartsOption } from 'echarts';
 
 @Component({
@@ -48,7 +48,7 @@ export class ChartsComponent implements OnInit {
 
   constructor(
     private userService: UserService,
-    private messageService: MessageService,
+    private toastService: ToastService,
     private router: Router
   ) {}
 
@@ -63,7 +63,7 @@ export class ChartsComponent implements OnInit {
         this.hobbiesChartOption = this.buildBarChart(data.hobbies);
         this.techInterestsChartOption = this.buildBarChart(data.techInterests, 1);
       },
-      error: () => this.toast('error', 'Error', 'Failed to load chart data')
+      error: () => this.toastService.show('error', 'Error', 'Failed to load chart data')
     });
   }
 
@@ -161,9 +161,5 @@ export class ChartsComponent implements OnInit {
 
   navigateToHome(): void {
     this.router.navigate(['/home']);
-  }
-
-  private toast(severity: string, summary: string, detail: string): void {
-    this.messageService.add({ severity, summary, detail, life: 3000 });
   }
 }
