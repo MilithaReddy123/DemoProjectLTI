@@ -38,8 +38,8 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { StepsModule } from 'primeng/steps';
 import { PaginatorModule } from 'primeng/paginator';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { ChartModule } from 'primeng/chart';
 import { TabViewModule } from 'primeng/tabview';
+import { NgxEchartsModule } from 'ngx-echarts';
 
 @NgModule({
   declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent, ChartsComponent],
@@ -73,8 +73,10 @@ import { TabViewModule } from 'primeng/tabview';
     StepsModule,
     PaginatorModule,
     DragDropModule,
-    ChartModule,
-    TabViewModule
+    TabViewModule,
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts')
+    })
   ],
   providers: [MessageService],
   bootstrap: [AppComponent]

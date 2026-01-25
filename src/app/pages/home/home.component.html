@@ -1,20 +1,18 @@
 <div class="home-container p-p-4">
-  <!-- Header -->
-  <div class="p-d-flex p-jc-between p-ai-center p-mb-4">
-    <div>
-      <h1 class="p-m-0 p-text-bold">
-        <i class="pi pi-users p-mr-2"></i>Cafeteria Members
-      </h1>
-      <p class="p-text-secondary p-mt-1 p-mb-0">Manage member registrations</p>
+  <!-- Header Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1 class="navbar-title">Cafeteria Members</h1>
+      <p class="navbar-subtitle">Manage member registrations</p>
     </div>
-    <div style="display: flex; gap: 0.5rem;">
+    <div class="navbar-actions">
       <button
         pButton
         type="button"
         label="Charts"
         icon="pi pi-chart-bar"
         (click)="navigateToCharts()"
-        class="p-button-info"
+        class="navbar-btn navbar-btn-charts"
       ></button>
       <button
         pButton
@@ -22,58 +20,61 @@
         label="Add Member"
         icon="pi pi-plus"
         (click)="openAddUser()"
-        class="p-button-success"
+        class="navbar-btn navbar-btn-add"
       ></button>
       <button
         pButton
         type="button"
         label="Logout"
-        icon="pi pi-sign-out"
         (click)="logout()"
-        class="p-button-text"
+        class="navbar-btn navbar-btn-logout"
       ></button>
     </div>
-  </div>
+  </nav>
 
   <p-toast></p-toast>
 
   <!-- Table Card -->
   <p-card>
-    <!-- Table Actions (top-right) -->
-    <div class="p-d-flex p-jc-end p-ai-center p-mb-2 table-actions">
-      <p-splitButton
-        label="Excel"
-        icon="pi pi-file-excel"
-        class="p-button-text"
-        [model]="excelMenuItems"
-      ></p-splitButton>
-      <button
-        pButton
-        type="button"
-        icon="pi pi-filter"
-        label="Filters"
-        class="p-button-text"
-        (click)="toggleFilters()"
-      ></button>
-      <button
-        pButton
-        type="button"
-        label="Clear"
-        icon="pi pi-times"
-        class="p-button-text"
-        (click)="clearFilters()"
-        [disabled]="loading || savingChanges"
-      ></button>
-      <button
-        pButton
-        type="button"
-        label="Save Changes"
-        icon="pi pi-save"
-        (click)="savechanges()"
-        [disabled]="loading || savingChanges"
-        [loading]="savingChanges"
-        class="p-button-primary"
-      ></button>
+    <!-- Table Actions -->
+    <div class="table-actions-bar">
+      <div class="table-actions-left">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-filter"
+          label="Filters"
+          class="action-btn action-btn-filter"
+          (click)="toggleFilters()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Clear"
+          icon="pi pi-times"
+          class="action-btn action-btn-clear"
+          (click)="clearFilters()"
+          [disabled]="loading || savingChanges"
+        ></button>
+      </div>
+      <div class="table-actions-right">
+        <p-splitButton
+          label="Excel"
+          icon="pi pi-file-excel"
+          class="action-btn action-btn-excel"
+          [model]="excelMenuItems"
+        ></p-splitButton>
+        <button
+          pButton
+          type="button"
+          label="Save Changes"
+          icon="pi pi-save"
+          (click)="savechanges()"
+          [disabled]="loading || savingChanges"
+          [loading]="savingChanges"
+          class="action-btn action-btn-save"
+        ></button>
+      </div>
     </div>
 
     <!-- Bulk Upload Dialog -->
@@ -198,10 +199,10 @@
     </p-dialog>
 
     <!-- Filter Bar -->
-    <div *ngIf="showFilters" class="p-fluid p-mb-3">
+    <div *ngIf="showFilters" class="p-fluid p-mb-3 p-p-3" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px;">
       <div class="formgrid grid">
-        <div class="field col-12 md:col-3">
-          <label for="filterName">Name</label>
+        <div class="field col-12 md:col-2">
+          <label for="filterName" class="p-d-block p-mb-2" style="font-weight: 600; font-size: 0.875rem;">Name</label>
           <input
             id="filterName"
             pInputText
@@ -210,11 +211,12 @@
             [(ngModel)]="filterModel.name"
             (ngModelChange)="applyLocalFilters()"
             autocomplete="off"
+            style="width: 100%; padding: 0.875rem 1rem; min-height: 44px;"
           />
         </div>
 
         <div class="field col-12 md:col-2">
-          <label for="filterState">State</label>
+          <label for="filterState" class="p-d-block p-mb-2" style="font-weight: 600; font-size: 0.875rem;">State</label>
           <p-dropdown
             id="filterState"
             [options]="stateFilterOptions"
@@ -222,11 +224,13 @@
             (onChange)="applyLocalFilters()"
             [showClear]="true"
             placeholder="All States"
+            styleClass="w-full"
+            [style]="{'min-height': '44px'}"
           ></p-dropdown>
         </div>
 
         <div class="field col-12 md:col-2">
-          <label for="filterCity">City</label>
+          <label for="filterCity" class="p-d-block p-mb-2" style="font-weight: 600; font-size: 0.875rem;">City</label>
           <p-dropdown
             id="filterCity"
             [options]="getFilterCityOptions()"
@@ -234,11 +238,13 @@
             (onChange)="applyLocalFilters()"
             [showClear]="true"
             placeholder="All Cities"
+            styleClass="w-full"
+            [style]="{'min-height': '44px'}"
           ></p-dropdown>
         </div>
 
         <div class="field col-12 md:col-2">
-          <label for="filterGender">Gender</label>
+          <label for="filterGender" class="p-d-block p-mb-2" style="font-weight: 600; font-size: 0.875rem;">Gender</label>
           <p-dropdown
             id="filterGender"
             [options]="genderFilterOptions"
@@ -246,11 +252,13 @@
             (onChange)="applyLocalFilters()"
             [showClear]="true"
             placeholder="All Genders"
+            styleClass="w-full"
+            [style]="{'min-height': '44px'}"
           ></p-dropdown>
         </div>
 
-        <div class="field col-12 md:col-3">
-          <label for="filterTech">Tech Interests</label>
+        <div class="field col-12 md:col-2">
+          <label for="filterTech" class="p-d-block p-mb-2" style="font-weight: 600; font-size: 0.875rem; white-space: nowrap;">Tech Interests</label>
           <p-multiSelect
             id="filterTech"
             [options]="techOptions"
@@ -258,6 +266,8 @@
             (onChange)="applyLocalFilters()"
             display="chip"
             defaultLabel="All Technologies"
+            styleClass="w-full"
+            [style]="{'min-height': '44px'}"
           ></p-multiSelect>
         </div>
       </div>
@@ -597,18 +607,20 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="12" class="p-text-center p-py-5">
-            <i class="pi pi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
-            <h4 class="p-mt-3 p-mb-2">No members found</h4>
-            <p class="p-text-secondary">Add your first member to get started</p>
-            <button
-              pButton
-              type="button"
-              label="Add Member"
-              icon="pi pi-plus"
-              (click)="openAddUser()"
-              class="p-button-sm p-mt-2"
-            ></button>
+          <td colspan="12" style="text-align: center; padding: 3rem 1rem;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <i class="pi pi-inbox" style="font-size: 3rem; color: #dee2e6;"></i>
+              <h4 class="p-mt-3 p-mb-2" style="margin: 0.75rem 0 0.5rem 0;">No members found</h4>
+              <p class="p-text-secondary" style="margin: 0 0 1rem 0;">Add your first member to get started</p>
+              <button
+                pButton
+                type="button"
+                label="Add Member"
+                icon="pi pi-plus"
+                (click)="openAddUser()"
+                class="p-button-sm"
+              ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -648,13 +660,15 @@
   <p-dialog
     [(visible)]="displayAddDialog"
     [modal]="true"
-    [style]="{ width: '800px' }"
+    [style]="{ width: '800px', 'max-width': '95vw' }"
     [maximizable]="true"
     [draggable]="false"
     [resizable]="false"
     header="Add New Member"
     (onHide)="onDialogHide()"
-    [contentStyle]="{ 'max-height': '70vh', 'overflow-y': 'auto' }"
+    [contentStyle]="{ 'max-height': 'calc(100vh - 200px)', 'overflow-y': 'auto', 'overflow-x': 'hidden' }"
+    styleClass="add-member-dialog"
+    [baseZIndex]="10000"
   >
     <app-user-form
       [user]="null"

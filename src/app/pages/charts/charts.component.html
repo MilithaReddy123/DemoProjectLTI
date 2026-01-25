@@ -1,5 +1,4 @@
 <div class="charts-container">
-  <!-- Header -->
   <div class="dashboard-header">
     <button
       pButton
@@ -7,60 +6,55 @@
       icon="pi pi-arrow-left"
       label="Back"
       (click)="navigateToHome()"
-      class="p-button-text back-button"
+      class="back-button"
     ></button>
     <div class="header-content">
       <h1 class="dashboard-title">
-        <i class="pi pi-chart-bar"></i>
-        Analytics Dashboard
+        <span class="title-icon"></span>
+        <span>Analytics Dashboard</span>
       </h1>
-      <p class="dashboard-subtitle">Visual insights into user data</p>
+      <p class="dashboard-subtitle">Visual insights into user data distribution</p>
     </div>
   </div>
 
   <p-toast></p-toast>
 
-  <!-- Charts Layout: Pie chart on left, Bar charts on right -->
   <div class="charts-layout">
-    <!-- Left: Pie Chart -->
     <div class="chart-item pie-chart-item">
-      <p-card header="Users by States" styleClass="chart-card">
-        <div class="chart-wrapper pie-wrapper">
-          <p-chart 
-            type="pie" 
-            [data]="stateChartData" 
-            [options]="chartOptions"
-          ></p-chart>
+      <div class="chart-card modern-card">
+        <div class="card-header">
+          <h3>Users by States</h3>
+          <span class="card-icon"></span>
         </div>
-      </p-card>
+        <div class="chart-wrapper pie-wrapper">
+          <div echarts [options]="stateChartOption" class="echarts-chart"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Right: Two Bar Charts -->
     <div class="bar-charts-container">
-      <!-- User Hobbies Bar Chart -->
       <div class="chart-item">
-        <p-card header="User Hobbies" styleClass="chart-card">
-          <div class="chart-wrapper">
-            <p-chart 
-              type="bar" 
-              [data]="hobbiesChartData" 
-              [options]="barChartOptions"
-            ></p-chart>
+        <div class="chart-card modern-card">
+          <div class="card-header">
+            <h3>User Hobbies</h3>
+            <span class="card-icon"></span>
           </div>
-        </p-card>
+          <div class="chart-wrapper">
+            <div echarts [options]="hobbiesChartOption" class="echarts-chart"></div>
+          </div>
+        </div>
       </div>
 
-      <!-- User Interests Bar Chart -->
       <div class="chart-item">
-        <p-card header="User Interests" styleClass="chart-card">
-          <div class="chart-wrapper">
-            <p-chart 
-              type="bar" 
-              [data]="techInterestsChartData" 
-              [options]="barChartOptions"
-            ></p-chart>
+        <div class="chart-card modern-card">
+          <div class="card-header">
+            <h3>User Interests</h3>
+            <span class="card-icon"></span>
           </div>
-        </p-card>
+          <div class="chart-wrapper">
+            <div echarts [options]="techInterestsChartOption" class="echarts-chart"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

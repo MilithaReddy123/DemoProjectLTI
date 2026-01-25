@@ -1,4 +1,4 @@
-<form [formGroup]="userForm" (ngSubmit)="onSubmit()" autocomplete="off">
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()" autocomplete="off" class="user-form">
   <div class="p-fluid formgrid grid">
     
     <!-- Name -->
@@ -145,7 +145,7 @@
   </div>
 
   <!-- Actions -->
-  <div class="flex justify-content-end mt-4 gap-2">
+  <div class="form-actions">
     <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-text" (click)="onCancel()"></button>
     <button pButton type="submit" [label]="isEditMode ? 'Update' : 'Save'" [icon]="isEditMode ? 'pi pi-check' : 'pi pi-save'" [loading]="submitting" class="p-button-success"></button>
   </div>
