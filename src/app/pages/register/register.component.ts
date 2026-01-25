@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -13,7 +13,7 @@ import { HttpClient } from '@angular/common/http';
   selector: 'app-register',
   templateUrl: './register.component.html',
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent {
   registerForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -86,10 +86,6 @@ export class RegisterComponent implements OnInit {
     }
 
     return password === confirmPassword ? null : { mismatch: true };
-  }
-
-  ngOnInit(): void {
-    // Component initialization
   }
 
   get f(): any {

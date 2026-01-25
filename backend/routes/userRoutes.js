@@ -6,13 +6,15 @@ const {
   createUser,
   updateUser,
   deleteUser,
-  getLookups,
-  downloadExcelTemplate,
-  bulkUpsertFromExcel,
   getStateDistribution,
   getHobbiesDistribution,
   getTechInterestsDistribution
 } = require('../controllers/userController');
+const {
+  getLookups,
+  downloadExcelTemplate,
+  bulkUpsertFromExcel
+} = require('../controllers/excelController');
 
 const router = express.Router();
 const upload = multer({

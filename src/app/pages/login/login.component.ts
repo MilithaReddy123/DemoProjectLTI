@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
   selector: 'app-login',
   templateUrl: './login.component.html'
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent {
   loginForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -29,10 +29,6 @@ export class LoginComponent implements OnInit {
         [Validators.required]
       ]
     });
-  }
-
-  ngOnInit(): void {
-    this.returnUrl = '/home';
   }
 
   get f(): any {

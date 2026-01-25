@@ -12,6 +12,8 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
 import { HomeComponent } from './pages/home/home.component';
+import { BulkExcelDialogComponent } from './pages/home/bulk-excel-dialog/bulk-excel-dialog.component';
+import { MembersTableComponent } from './pages/home/members-table/members-table.component';
 import { UserFormComponent } from './shared/user-form/user-form.component';
 import { ChartsComponent } from './pages/charts/charts.component';
 
@@ -27,7 +29,6 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { InputTextareaModule } from 'primeng/inputtextarea';
-import { ToolbarModule } from 'primeng/toolbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ChipModule } from 'primeng/chip';
 import { TagModule } from 'primeng/tag';
@@ -38,11 +39,19 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { StepsModule } from 'primeng/steps';
 import { PaginatorModule } from 'primeng/paginator';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { TabViewModule } from 'primeng/tabview';
 import { NgxEchartsModule } from 'ngx-echarts';
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, RegisterComponent, HomeComponent, UserFormComponent, ChartsComponent],
+  declarations: [
+    AppComponent,
+    LoginComponent,
+    RegisterComponent,
+    HomeComponent,
+    BulkExcelDialogComponent,
+    MembersTableComponent,
+    UserFormComponent,
+    ChartsComponent
+  ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -62,7 +71,6 @@ import { NgxEchartsModule } from 'ngx-echarts';
     CheckboxModule,
     MultiSelectModule,
     InputTextareaModule,
-    ToolbarModule,
     TooltipModule,
     ChipModule,
     TagModule,
@@ -73,7 +81,6 @@ import { NgxEchartsModule } from 'ngx-echarts';
     StepsModule,
     PaginatorModule,
     DragDropModule,
-    TabViewModule,
     NgxEchartsModule.forRoot({
       echarts: () => import('echarts')
     })
